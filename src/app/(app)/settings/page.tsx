@@ -1,12 +1,13 @@
+
 'use client';
-import { useState } from 'react';
+import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, Trash2, Tag } from 'lucide-react';
+import { Plus, Trash2, Tag, Upload, Download } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { DEFAULT_TASK_TYPES } from '@/lib/data';
-import type { TaskType } from '@/lib/types';
+import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
+import type { TaskType, Seed, LogEntry, ScheduledTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+
 
 const formSchema = z.object({
   name: z.string().min(2, 'Task name must be at least 2 characters.'),
@@ -39,8 +42,13 @@ type CustomTaskFormValues = z.infer<typeof formSchema>;
 
 export default function SettingsPage() {
   const [customTasks, setCustomTasks] = useLocalStorage<TaskType[]>('customTasks', []);
-  const { toast } = useToast();
+  const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
+  const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
+  const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<CustomTaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: '' },
@@ -68,6 +76,88 @@ export default function SettingsPage() {
         variant: 'destructive',
     });
   };
+  
+  const handleExport = () => {
+    const dataToExport = {
+      seeds,
+      logs,
+      scheduledTasks,
+      customTasks,
+      exportDate: new Date().toISOString(),
+    };
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `seed-studio-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({
+      title: 'Data Exported',
+      description: 'Your data has been downloaded successfully.',
+    });
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') {
+          throw new Error('Invalid file format');
+        }
+        const importedData = JSON.parse(text);
+
+        // Basic validation
+        if (
+          !('seeds' in importedData) ||
+          !('logs' in importedData) ||
+          !('scheduledTasks' in importedData) ||
+          !('customTasks' in importedData)
+        ) {
+          throw new Error('File is missing required data.');
+        }
+
+        setSeeds(importedData.seeds);
+        setLogs(importedData.logs);
+        setScheduledTasks(importedData.scheduledTasks);
+        setCustomTasks(importedData.customTasks);
+        
+        toast({
+          title: 'Import Successful',
+          description: 'Your data has been restored. The app will now reload.',
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Import Failed',
+          description: error.message || 'Could not parse the file.',
+        });
+      } finally {
+        // Reset file input
+        if(fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
   return (
     <>
@@ -160,16 +250,68 @@ export default function SettingsPage() {
             <CardHeader>
                 <CardTitle>Data Management</CardTitle>
                 <CardDescription>
-                All your data is stored securely in your browser's local storage.
+                Export your data to a file or import it to restore a backup.
                 </CardDescription>
             </CardHeader>
-            <CardContent>
-                <p className="text-sm text-muted-foreground">
-                    Your seed inventory, logs, and schedules are saved directly on your device. Clearing your browser data may remove your Seed Studio data permanently.
-                </p>
+            <CardContent className="space-y-4">
+                <div>
+                    <h3 className="text-base font-medium">Local Storage</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Your seed inventory, logs, and schedules are saved directly on your device. Clearing your browser data may remove your Seed Studio data permanently.
+                    </p>
+                </div>
+                <Separator />
+                <div>
+                    <h3 className="text-base font-medium">Export Data</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                        Download all your application data into a single JSON file for backup.
+                    </p>
+                    <Button variant="outline" onClick={handleExport}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export to JSON
+                    </Button>
+                </div>
+                <Separator />
+                <div>
+                     <h3 className="text-base font-medium">Import Data</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                       Restore your data from a previously exported JSON backup file.
+                    </p>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive">
+                                <Upload className="mr-2 h-4 w-4" />
+                                Import from JSON
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to import?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will overwrite all current data in the application. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleImportClick}>
+                                Yes, Import Data
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept=".json"
+                        onChange={handleFileChange}
+                    />
+                </div>
             </CardContent>
         </Card>
       </div>
     </>
   );
 }
+
+    
