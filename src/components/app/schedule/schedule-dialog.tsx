@@ -18,6 +18,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,11 +32,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   taskId: z.string().min(1, 'Please select an activity.'),
   recurrence: z.enum(recurrences, { required_error: 'Please select a recurrence.' }),
   notes: z.string().optional(),
+  startDate: z.date().optional(),
 });
 
 type ScheduleFormValues = z.infer<typeof formSchema>;
@@ -60,6 +67,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
         taskId: scheduledTask?.taskId || '',
         recurrence: scheduledTask?.recurrence || 'weekly',
         notes: scheduledTask?.notes || '',
+        startDate: scheduledTask?.startDate ? new Date(scheduledTask.startDate) : undefined,
       });
     }
   }, [scheduledTask, form, isOpen]);
@@ -69,6 +77,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
       id: scheduledTask?.id || crypto.randomUUID(),
       ...data,
       notes: data.notes || '',
+      startDate: data.startDate ? data.startDate.toISOString() : undefined,
     };
     onSave(newScheduledTask);
     onOpenChange(false);
@@ -80,7 +89,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{scheduledTask ? 'Edit Scheduled Task' : 'Add New Scheduled Task'}</DialogTitle>
           <DialogDescription>
@@ -88,7 +97,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <FormField
               control={form.control}
               name="taskId"
@@ -113,30 +122,69 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
                 </FormItem>
               )}
             />
-            <FormField
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="recurrence"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recurrence</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select how often" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {recurrences.map((r) => (
+                          <SelectItem key={r} value={r} className="capitalize">
+                            {r}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
               control={form.control}
-              name="recurrence"
+              name="startDate"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recurrence</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select how often" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {recurrences.map((r) => (
-                        <SelectItem key={r} value={r} className="capitalize">
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Start Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                   <FormDescription>
+                    Optional: When the task should first appear.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            </div>
             <FormField
               control={form.control}
               name="notes"

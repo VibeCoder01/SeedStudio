@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES } from '@/lib/data';
-import type { ScheduledTask, TaskType } from '@/lib/types';
+import type { ScheduledTask, TaskType, LogEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -28,15 +28,21 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ScheduleDialog } from '@/components/app/schedule/schedule-dialog';
+import { LogDialog } from '@/components/app/logs/log-dialog';
+import { isAfter, subDays, differenceInDays, isPast } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 export default function SchedulePage() {
   const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
+  const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
   const { toast } = useToast();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ScheduledTask | undefined>(undefined);
+  const [logTemplate, setLogTemplate] = useState<Partial<LogEntry> | undefined>(undefined);
 
   const getTaskById = (taskId: string) => {
     return allTasks.find(task => task.id === taskId);
@@ -44,12 +50,12 @@ export default function SchedulePage() {
 
   const handleAdd = () => {
     setEditingTask(undefined);
-    setDialogOpen(true);
+    setScheduleDialogOpen(true);
   };
 
   const handleEdit = (task: ScheduledTask) => {
     setEditingTask(task);
-    setDialogOpen(true);
+    setScheduleDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -68,6 +74,46 @@ export default function SchedulePage() {
     }
   };
 
+  const handleLogSave = (log: LogEntry) => {
+    setLogs([log, ...logs]);
+  };
+  
+  const handleCompleteTask = (task: ScheduledTask) => {
+    setLogTemplate({
+      taskId: task.taskId,
+      notes: `Completed from schedule: ${getTaskById(task.taskId)?.name}`,
+    });
+    setLogDialogOpen(true);
+  };
+
+  const isTaskOverdue = (task: ScheduledTask): boolean => {
+    const lastLog = logs
+      .filter(log => log.taskId === task.taskId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+
+    if (!lastLog) {
+      // If a task has a start date in the past and has never been logged, it's overdue.
+      return task.startDate ? isPast(new Date(task.startDate)) : true;
+    }
+    
+    const lastDate = new Date(lastLog.date);
+    const today = new Date();
+    const daysSinceLast = differenceInDays(today, lastDate);
+
+    switch (task.recurrence) {
+        case 'daily': return daysSinceLast > 1;
+        case 'weekly': return daysSinceLast > 7;
+        case 'bi-weekly': return daysSinceLast > 14;
+        case 'monthly': return daysSinceLast > 30;
+        default: return false;
+    }
+  };
+
+  const activeScheduledTasks = scheduledTasks.filter(task => 
+    !task.startDate || isAfter(new Date(), new Date(task.startDate)) || differenceInDays(new Date(task.startDate), new Date()) <= 0
+  );
+
+
   return (
     <>
       <PageHeader title="Task Schedule">
@@ -77,19 +123,23 @@ export default function SchedulePage() {
         </Button>
       </PageHeader>
       
-      {scheduledTasks.length > 0 ? (
+      {activeScheduledTasks.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {scheduledTasks.map((scheduledTask) => {
+          {activeScheduledTasks.map((scheduledTask) => {
             const taskInfo = getTaskById(scheduledTask.taskId);
             const Icon = taskInfo?.icon;
+            const isOverdue = isTaskOverdue(scheduledTask);
             return (
-              <Card key={scheduledTask.id}>
+              <Card key={scheduledTask.id} className={isOverdue ? "border-destructive" : ""}>
                 <CardHeader>
                   <div className='flex items-start justify-between'>
                     <div className="flex items-center gap-3">
                         {Icon && <Icon className="h-8 w-8 text-primary" />}
                         <div>
-                            <CardTitle className="font-headline">{taskInfo?.name || 'Unknown Task'}</CardTitle>
+                            <CardTitle className="font-headline flex items-center gap-2">
+                              {taskInfo?.name || 'Unknown Task'}
+                              {isOverdue && <Badge variant="destructive">Overdue</Badge>}
+                            </CardTitle>
                             <CardDescription className="capitalize">{scheduledTask.recurrence}</CardDescription>
                         </div>
                     </div>
@@ -99,6 +149,10 @@ export default function SchedulePage() {
                   <p className="text-sm text-muted-foreground">{scheduledTask.notes || 'No additional notes.'}</p>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleCompleteTask(scheduledTask)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Complete
+                  </Button>
                   <Button variant="outline" size="icon" onClick={() => handleEdit(scheduledTask)}>
                     <Edit className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
@@ -141,12 +195,20 @@ export default function SchedulePage() {
       )}
 
       <ScheduleDialog
-        isOpen={dialogOpen}
-        onOpenChange={setDialogOpen}
+        isOpen={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
         onSave={handleSave}
         scheduledTask={editingTask}
         tasks={allTasks}
       />
+      
+      <LogDialog
+        isOpen={logDialogOpen}
+        onOpenChange={setLogDialogOpen}
+        onSave={handleLogSave}
+        log={logTemplate ? {id: '', date: new Date().toISOString(), ...logTemplate} : undefined}
+        tasks={allTasks}
+       />
     </>
   );
 }

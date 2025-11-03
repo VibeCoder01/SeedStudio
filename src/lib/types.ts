@@ -33,4 +33,5 @@ export interface ScheduledTask {
   taskId: string;
   recurrence: Recurrence;
   notes: string;
+  startDate?: string; // ISO string
 }
