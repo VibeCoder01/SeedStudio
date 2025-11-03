@@ -82,6 +82,7 @@ export default function SchedulePage() {
     setLogTemplate({
       taskId: task.taskId,
       notes: `Completed from schedule: ${getTaskById(task.taskId)?.name}`,
+      date: new Date().toISOString(),
     });
     setLogDialogOpen(true);
   };
@@ -206,7 +207,7 @@ export default function SchedulePage() {
         isOpen={logDialogOpen}
         onOpenChange={setLogDialogOpen}
         onSave={handleLogSave}
-        log={logTemplate ? {id: '', date: new Date().toISOString(), ...logTemplate} : undefined}
+        log={logTemplate}
         tasks={allTasks}
        />
     </>

@@ -56,7 +56,7 @@ interface LogDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (log: LogEntry) => void;
-  log?: LogEntry;
+  log?: Partial<LogEntry>;
   tasks: TaskType[];
 }
 
@@ -73,7 +73,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
     if (isOpen) {
       form.reset({
         taskId: log?.taskId || '',
-        date: log ? new Date(log.date) : new Date(),
+        date: log?.date ? new Date(log.date) : new Date(),
         notes: log?.notes || '',
         photo: log?.photo || '',
       });
@@ -125,7 +125,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
     onSave(newLog);
     onOpenChange(false);
     toast({
-      title: log ? 'Log Updated' : 'Log Added',
+      title: log?.id ? 'Log Updated' : 'Log Added',
       description: 'Your garden log has been updated.',
     });
   };
@@ -134,9 +134,9 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{log ? 'Edit Log Entry' : 'Add New Log Entry'}</DialogTitle>
+          <DialogTitle>{log?.id ? 'Edit Log Entry' : 'Add New Log Entry'}</DialogTitle>
           <DialogDescription>
-            {log ? 'Update the details for this log.' : 'Add a new activity to your garden log.'}
+            {log?.id ? 'Update the details for this log.' : 'Add a new activity to your garden log.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
