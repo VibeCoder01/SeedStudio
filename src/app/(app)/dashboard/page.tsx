@@ -1,8 +1,9 @@
 'use client';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import type { Seed, ScheduledTask, LogEntry, TaskType } from '@/lib/types';
-import { INITIAL_SEEDS, DEFAULT_TASK_TYPES } from '@/lib/data';
+import type { Seed, ScheduledTask, LogEntry } from '@/lib/types';
+import { INITIAL_SEEDS } from '@/lib/data';
 import PageHeader from '@/components/page-header';
 import {
   Card,
@@ -13,19 +14,28 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Info } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ActivityChart } from '@/components/app/dashboard/activity-chart';
+import { useTasks } from '@/hooks/use-tasks';
 
 export default function DashboardPage() {
   const [seeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const [scheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   const [logs] = useLocalStorage<LogEntry[]>('logs', []);
-  const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
-  const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
+  const { allTasks } = useTasks();
 
-  const lowStockSeeds = seeds.filter((seed) => seed.stock < 10);
-  const nextTask = scheduledTasks.length > 0 ? scheduledTasks[0] : null;
-  const nextTaskInfo = nextTask ? allTasks.find(t => t.id === nextTask.taskId) : null;
+  const lowStockSeeds = useMemo(() => seeds.filter((seed) => seed.stock < 10), [seeds]);
+  
+  const nextTask = useMemo(() => {
+    // Simple sort, can be improved with date-fns if more complex logic is needed
+    const sortedTasks = [...scheduledTasks].sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+    return sortedTasks.length > 0 ? sortedTasks[0] : null;
+  }, [scheduledTasks]);
+
+  const nextTaskInfo = useMemo(() => {
+    if (!nextTask) return null;
+    return allTasks.find(t => t.id === nextTask.taskId);
+  }, [nextTask, allTasks]);
 
   return (
     <>

@@ -1,6 +1,6 @@
 
 'use client';
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -56,30 +56,30 @@ export default function SettingsPage() {
     defaultValues: { name: '' },
   });
 
-  const onSubmit = (data: CustomTaskFormValues) => {
+  const onSubmit = useCallback((data: CustomTaskFormValues) => {
     const newTask: TaskType = {
       id: `custom-${crypto.randomUUID()}`,
       name: data.name,
       icon: Tag,
     };
-    setCustomTasks([...customTasks, newTask]);
+    setCustomTasks(currentTasks => [...currentTasks, newTask]);
     form.reset();
     toast({
       title: 'Custom Task Added',
       description: `"${data.name}" has been added to your tasks.`,
     });
-  };
+  }, [setCustomTasks, form, toast]);
 
-  const handleDelete = (id: string) => {
-    setCustomTasks(customTasks.filter((task) => task.id !== id));
+  const handleDelete = useCallback((id: string) => {
+    setCustomTasks(currentTasks => currentTasks.filter((task) => task.id !== id));
     toast({
         title: 'Custom Task Removed',
         description: `The task has been removed.`,
         variant: 'destructive',
     });
-  };
+  }, [setCustomTasks, toast]);
   
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const dataToExport = {
       seeds,
       logs,
@@ -101,13 +101,13 @@ export default function SettingsPage() {
       title: 'Data Exported',
       description: 'Your data has been downloaded successfully.',
     });
-  };
+  }, [seeds, logs, scheduledTasks, customTasks, toast]);
 
-  const handleImportClick = () => {
+  const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -120,7 +120,6 @@ export default function SettingsPage() {
         }
         const importedData = JSON.parse(text);
 
-        // Basic validation
         if (
           !('seeds' in importedData) ||
           !('logs' in importedData) ||
@@ -151,14 +150,13 @@ export default function SettingsPage() {
           description: error.message || 'Could not parse the file.',
         });
       } finally {
-        // Reset file input
         if(fileInputRef.current) {
             fileInputRef.current.value = '';
         }
       }
     };
     reader.readAsText(file);
-  };
+  }, [setSeeds, setLogs, setScheduledTasks, setCustomTasks, toast]);
 
 
   return (
@@ -343,5 +341,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-    

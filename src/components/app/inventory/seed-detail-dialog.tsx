@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import type { Seed, TaskType } from '@/lib/types';
+import type { Seed, TaskType, ScheduledTask } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,12 +12,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Edit, CalendarPlus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ScheduleDialog } from '../schedule/schedule-dialog';
-import type { ScheduledTask } from '@/lib/types';
-import { DEFAULT_TASK_TYPES } from '@/lib/data';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useTasks } from '@/hooks/use-tasks';
 
 interface SeedDetailDialogProps {
   isOpen: boolean;
@@ -29,26 +27,26 @@ interface SeedDetailDialogProps {
 export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDetailDialogProps) {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
-  const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
-  const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
+  const { allTasks } = useTasks();
 
   if (!seed) return null;
 
   const imageData = PlaceHolderImages.find((img) => img.id === seed.imageId) || PlaceHolderImages[0];
   
-  const handleEditClick = () => {
+  const handleEditClick = useCallback(() => {
     onOpenChange(false); // Close this dialog
     onEdit(seed); // Open the edit dialog
-  };
+  }, [onOpenChange, onEdit, seed]);
 
-  const handleScheduleClick = () => {
+  const handleScheduleClick = useCallback(() => {
     onOpenChange(false); // Close this dialog
     setScheduleDialogOpen(true);
-  };
+  }, [onOpenChange]);
 
-  const handleScheduleSave = (task: ScheduledTask) => {
-    setScheduledTasks([...scheduledTasks, task]);
-  };
+  const handleScheduleSave = useCallback((task: ScheduledTask) => {
+    const newScheduledTask = { ...task, id: crypto.randomUUID() };
+    setScheduledTasks(currentTasks => [...currentTasks, newScheduledTask]);
+  }, [setScheduledTasks]);
 
   const scheduleTaskTemplate: Partial<ScheduledTask> = {
     notes: `Task for ${seed.name}`,

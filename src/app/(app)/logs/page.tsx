@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
-import type { LogEntry, TaskType, Seed } from '@/lib/types';
+import { INITIAL_SEEDS } from '@/lib/data';
+import type { LogEntry, Seed } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -41,14 +41,14 @@ import {
 } from '@/components/ui/dialog';
 import { deleteImage } from '@/lib/idb';
 import { LogPhoto } from '@/components/app/logs/log-photo';
+import { useTasks } from '@/hooks/use-tasks';
 
 type SortKey = 'task' | 'date';
 
 export default function LogsPage() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
-  const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
-  const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
+  const { allTasks, getTaskById } = useTasks();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
@@ -58,55 +58,51 @@ export default function LogsPage() {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
 
   const { toast } = useToast();
-
-  const getTaskById = (taskId: string) => {
-    return allTasks.find((task) => task.id === taskId);
-  };
   
-  const getSeedById = (seedId?: string) => {
+  const getSeedById = useCallback((seedId?: string) => {
     if (!seedId) return undefined;
     return seeds.find((seed) => seed.id === seedId);
-  };
+  }, [seeds]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingLog(undefined);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (log: LogEntry) => {
+  const handleEdit = useCallback((log: LogEntry) => {
     setEditingLog(log);
     setDialogOpen(true);
-  };
+  }, []);
   
-  const handleViewPhoto = (photoId: string) => {
+  const handleViewPhoto = useCallback((photoId: string) => {
     setViewingPhotoId(photoId);
     setPhotoDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     const logToDelete = logs.find(log => log.id === id);
     if (logToDelete?.photoId) {
       await deleteImage(logToDelete.photoId);
     }
-    setLogs(logs.filter((log) => log.id !== id));
+    setLogs(currentLogs => currentLogs.filter((log) => log.id !== id));
     toast({
       title: 'Log Deleted',
       description: 'The log entry has been removed.',
     });
-  };
+  }, [logs, setLogs, toast]);
 
-  const handleSave = (log: LogEntry) => {
+  const handleSave = useCallback((log: LogEntry) => {
     if (editingLog) {
-      setLogs(logs.map((l) => (l.id === log.id ? log : l)));
+      setLogs(currentLogs => currentLogs.map((l) => (l.id === log.id ? log : l)));
     } else {
-      setLogs([log, ...logs]); // Add new log to the top
+      setLogs(currentLogs => [log, ...currentLogs]); // Add new log to the top
     }
 
     if (log.taskId === 'planting' && log.seedId && log.quantity) {
       const plantedSeed = getSeedById(log.seedId);
       if (plantedSeed) {
         const newStock = plantedSeed.stock - log.quantity;
-        setSeeds(seeds.map(s => s.id === log.seedId ? {...s, stock: newStock} : s));
+        setSeeds(currentSeeds => currentSeeds.map(s => s.id === log.seedId ? {...s, stock: newStock} : s));
         
         if (newStock < 10 && plantedSeed.stock >= 10) {
            toast({
@@ -116,15 +112,17 @@ export default function LogsPage() {
         }
       }
     }
-  };
+  }, [editingLog, setLogs, getSeedById, setSeeds, toast]);
 
-  const requestSort = (key: SortKey) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
+  const requestSort = useCallback((key: SortKey) => {
+    setSortConfig(currentSortConfig => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (currentSortConfig && currentSortConfig.key === key && currentSortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        return { key, direction };
+    });
+  }, []);
   
   const sortedAndFilteredLogs = useMemo(() => {
     let sortableItems = [...logs];
@@ -149,11 +147,12 @@ export default function LogsPage() {
     return sortableItems.filter(log => {
       const task = getTaskById(log.taskId);
       const seed = getSeedById(log.seedId);
-      return (task?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              log.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              seed?.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      const searchTermLower = searchTerm.toLowerCase();
+      return (task?.name.toLowerCase().includes(searchTermLower) ||
+              log.notes?.toLowerCase().includes(searchTermLower) ||
+              seed?.name.toLowerCase().includes(searchTermLower))
     });
-  }, [logs, searchTerm, sortConfig]);
+  }, [logs, searchTerm, sortConfig, getTaskById, getSeedById]);
 
   return (
     <>

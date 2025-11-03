@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Plus, Edit, Trash2, ArrowUpDown, Search, X } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -46,53 +46,57 @@ export default function InventoryPage() {
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (seed: Seed) => {
+  const handleEdit = useCallback((seed: Seed) => {
     setEditingSeed(seed);
     setDialogOpen(true);
-  };
+  }, []);
   
-  const handleViewDetails = (seed: Seed) => {
+  const handleViewDetails = useCallback((seed: Seed) => {
     setViewingSeed(seed);
     setDetailDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
-    setSeeds(seeds.filter((seed) => seed.id !== id));
-  };
+  const handleDelete = useCallback((id: string) => {
+    setSeeds(currentSeeds => currentSeeds.filter((seed) => seed.id !== id));
+  }, [setSeeds]);
 
-  const handleSave = (seed: Seed) => {
+  const handleSave = useCallback((seed: Seed) => {
     if (editingSeed) {
-      setSeeds(seeds.map((s) => (s.id === seed.id ? seed : s)));
+      setSeeds(currentSeeds => currentSeeds.map((s) => (s.id === seed.id ? seed : s)));
     } else {
-      setSeeds([...seeds, seed]);
+      setSeeds(currentSeeds => [...currentSeeds, seed]);
     }
-  };
+  }, [editingSeed, setSeeds]);
 
   const getImageData = (imageId: string) => {
     return PlaceHolderImages.find((img) => img.id === imageId) || PlaceHolderImages[0];
   };
 
-  const requestSort = (key: SortKey) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
+  const requestSort = useCallback((key: SortKey) => {
+    setSortConfig(currentSortConfig => {
+      let direction: 'ascending' | 'descending' = 'ascending';
+      if (currentSortConfig && currentSortConfig.key === key && currentSortConfig.direction === 'ascending') {
+        direction = 'descending';
+      }
+      return { key, direction };
+    });
+  }, []);
   
   const sortedAndFilteredSeeds = useMemo(() => {
     let sortableItems = [...seeds];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+        if (valA < valB) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (valA > valB) {
           return sortConfig.direction === 'ascending' ? 1 : -1;
         }
         return 0;
@@ -123,13 +127,13 @@ export default function InventoryPage() {
     }
   };
 
-  const handleDeleteSelected = () => {
-    setSeeds(seeds.filter(seed => !selectedSeeds.includes(seed.id)));
+  const handleDeleteSelected = useCallback(() => {
+    setSeeds(currentSeeds => currentSeeds.filter(seed => !selectedSeeds.includes(seed.id)));
     toast({
       title: `${selectedSeeds.length} seed(s) deleted`,
     });
     setSelectedSeeds([]);
-  };
+  }, [selectedSeeds, setSeeds, toast]);
   
   // Clear selection if the filter/sort changes
   useEffect(() => {
@@ -166,7 +170,7 @@ export default function InventoryPage() {
                  <div className="flex items-center space-x-2">
                     <Checkbox
                         id="selectAll"
-                        checked={isAllSelected}
+                        checked={sortedAndFilteredSeeds.length > 0 && isAllSelected}
                         onCheckedChange={handleSelectAll}
                     />
                     <label

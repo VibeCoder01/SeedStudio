@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Edit, Trash2, CheckCircle2, MoreVertical } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { Plus, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
-import type { ScheduledTask, TaskType, LogEntry, Seed } from '@/lib/types';
+import { INITIAL_SEEDS } from '@/lib/data';
+import type { ScheduledTask, LogEntry, Seed } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -29,16 +29,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ScheduleDialog } from '@/components/app/schedule/schedule-dialog';
 import { LogDialog } from '@/components/app/logs/log-dialog';
-import { isAfter, subDays, differenceInDays, isPast } from 'date-fns';
+import { isAfter, differenceInDays, isPast } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useTasks } from '@/hooks/use-tasks';
 
 export default function SchedulePage() {
   const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
-  const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
-  const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
+  const { allTasks, getTaskById } = useTasks();
   const { toast } = useToast();
 
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
@@ -46,53 +46,51 @@ export default function SchedulePage() {
   const [editingTask, setEditingTask] = useState<ScheduledTask | undefined>(undefined);
   const [logTemplate, setLogTemplate] = useState<Partial<LogEntry> | undefined>(undefined);
 
-  const getTaskById = (taskId: string) => {
-    return allTasks.find(task => task.id === taskId);
-  };
-
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingTask(undefined);
     setScheduleDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (task: ScheduledTask) => {
+  const handleEdit = useCallback((task: ScheduledTask) => {
     setEditingTask(task);
     setScheduleDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
-    setScheduledTasks(scheduledTasks.filter((task) => task.id !== id));
+  const handleDelete = useCallback((id: string) => {
+    setScheduledTasks(currentTasks => currentTasks.filter((task) => task.id !== id));
     toast({
       title: 'Task Deleted',
       description: 'The scheduled task has been removed.',
     });
-  };
+  }, [setScheduledTasks, toast]);
 
-  const handleSave = (task: ScheduledTask) => {
+  const handleSave = useCallback((task: ScheduledTask) => {
     if (editingTask) {
-      setScheduledTasks(scheduledTasks.map((t) => (t.id === task.id ? task : t)));
+      setScheduledTasks(currentTasks => currentTasks.map((t) => (t.id === task.id ? task : t)));
     } else {
-      setScheduledTasks([...scheduledTasks, task]);
+      setScheduledTasks(currentTasks => [...currentTasks, task]);
     }
-  };
+  }, [editingTask, setScheduledTasks]);
 
-  const handleLogSave = (log: LogEntry) => {
-    const existingLogIndex = logs.findIndex(l => l.id === log.id);
-    if (existingLogIndex > -1) {
-       setLogs(logs.map((l, index) => index === existingLogIndex ? log : l));
-    } else {
-       setLogs([log, ...logs]);
-    }
-  };
+  const handleLogSave = useCallback((log: LogEntry) => {
+    setLogs(currentLogs => {
+        const existingLogIndex = currentLogs.findIndex(l => l.id === log.id);
+        if (existingLogIndex > -1) {
+           return currentLogs.map((l, index) => index === existingLogIndex ? log : l);
+        } else {
+           return [log, ...currentLogs];
+        }
+    });
+  }, [setLogs]);
   
-  const handleCompleteTask = (task: ScheduledTask) => {
+  const handleCompleteTask = useCallback((task: ScheduledTask) => {
      const newLog: LogEntry = {
       id: crypto.randomUUID(),
       taskId: task.taskId,
       date: new Date().toISOString(),
       notes: `Completed from schedule: ${getTaskById(task.taskId)?.name}`,
     };
-    setLogs(logs => [newLog, ...logs]);
+    setLogs(currentLogs => [newLog, ...currentLogs]);
     toast({
         title: "Task Completed!",
         description: `Logged "${getTaskById(task.taskId)?.name}".`,
@@ -102,16 +100,15 @@ export default function SchedulePage() {
           </Button>
         ),
       });
-  };
+  }, [getTaskById, setLogs, toast]);
 
-  const isTaskOverdue = (task: ScheduledTask): boolean => {
+  const isTaskOverdue = useCallback((task: ScheduledTask): boolean => {
     const lastLog = logs
       .filter(log => log.taskId === task.taskId)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
     if (!lastLog) {
-      // If a task has a start date in the past and has never been logged, it's overdue.
-      return task.startDate ? isPast(new Date(task.startDate)) : true;
+      return task.startDate ? isPast(new Date(task.startDate)) : false;
     }
     
     const lastDate = new Date(lastLog.date);
@@ -125,11 +122,13 @@ export default function SchedulePage() {
         case 'monthly': return daysSinceLast > 30;
         default: return false;
     }
-  };
+  }, [logs]);
 
-  const activeScheduledTasks = scheduledTasks.filter(task => 
-    !task.startDate || isAfter(new Date(), new Date(task.startDate)) || differenceInDays(new Date(task.startDate), new Date()) <= 0
-  );
+  const activeScheduledTasks = useMemo(() => {
+    return scheduledTasks.filter(task => 
+        !task.startDate || isAfter(new Date(), new Date(task.startDate)) || differenceInDays(new Date(task.startDate), new Date()) <= 0
+      ).sort((a, b) => (getTaskById(a.taskId)?.name || '').localeCompare(getTaskById(b.taskId)?.name || ''));
+  }, [scheduledTasks, getTaskById]);
 
 
   return (
@@ -146,9 +145,9 @@ export default function SchedulePage() {
           {activeScheduledTasks.map((scheduledTask) => {
             const taskInfo = getTaskById(scheduledTask.taskId);
             const Icon = taskInfo?.icon;
-            const isOverdue = isTaskOverdue(scheduledTask);
+            const overdue = isTaskOverdue(scheduledTask);
             return (
-              <Card key={scheduledTask.id} className={isOverdue ? "border-destructive" : ""}>
+              <Card key={scheduledTask.id} className={overdue ? "border-destructive" : ""}>
                 <CardHeader>
                   <div className='flex items-start justify-between'>
                     <div className="flex items-center gap-3">
@@ -156,7 +155,7 @@ export default function SchedulePage() {
                         <div>
                             <CardTitle className="font-headline flex items-center gap-2">
                               {taskInfo?.name || 'Unknown Task'}
-                              {isOverdue && <Badge variant="destructive">Overdue</Badge>}
+                              {overdue && <Badge variant="destructive">Overdue</Badge>}
                             </CardTitle>
                             <CardDescription className="capitalize">{scheduledTask.recurrence}</CardDescription>
                         </div>
