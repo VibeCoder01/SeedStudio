@@ -1,10 +1,27 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from './use-toast';
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((val: T) => T)) => void] {
   const [value, setValue] = useState<T>(initialValue);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { toast } = useToast();
+
+  const handleError = useCallback(
+    (error: unknown, operation: 'read' | 'write') => {
+      console.warn(`Error during localStorage ${operation} for key “${key}”:`, error);
+      toast({
+        variant: 'destructive',
+        title: 'Storage Error',
+        description: `Could not ${operation} data. Your changes might not be saved. Please ensure you are not in private browsing mode and have enough storage space.`,
+      });
+    },
+    [key, toast]
+  );
 
   useEffect(() => {
     let item;
@@ -13,19 +30,22 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         item = window.localStorage.getItem(key);
       }
     } catch (error) {
-      console.warn(`Error reading localStorage key “${key}”:`, error);
+      handleError(error, 'read');
     }
 
     if (item) {
-      setValue(JSON.parse(item));
+      try {
+        setValue(JSON.parse(item));
+      } catch (error) {
+        handleError(error, 'read');
+      }
     }
     setIsInitialized(true);
-  }, [key]);
+  }, [key, handleError]);
 
   const setStoredValue = (newValue: T | ((val: T) => T)) => {
     if (!isInitialized) {
-        // Prevent setting value before initialization
-        return;
+      return;
     }
     try {
       const valueToStore = newValue instanceof Function ? newValue(value) : newValue;
@@ -34,7 +54,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
-      console.warn(`Error setting localStorage key “${key}”:`, error);
+      handleError(error, 'write');
     }
   };
 
