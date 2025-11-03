@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "tomato-seeds",
+      "description": "A packet of tomato seeds on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1587486938113-d6d38d424efa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0b21hdG8lMjBzZWVkc3xlbnwwfHx8fDE3NjIxOTEwOTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tomato seeds"
+    },
+    {
+      "id": "carrot-seeds",
+      "description": "A packet of carrot seeds on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1703929088656-9f1665d965b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjYXJyb3QlMjBzZWVkc3xlbnwwfHx8fDE3NjIyMDM5MzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "carrot seeds"
+    },
+    {
+      "id": "lettuce-seeds",
+      "description": "A packet of lettuce seeds on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1580792442222-081d7796d896?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsZXR0dWNlJTIwc2VlZHN8ZW58MHx8fHwxNzYyMjAzOTMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lettuce seeds"
+    },
+    {
+      "id": "basil-seeds",
+      "description": "A packet of basil seeds on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1622222250466-08eeb5f9999e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YmFzaWwlMjBzZWVkc3xlbnwwfHx8fDE3NjIyMDM5MzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "basil seeds"
+    },
+    {
+      "id": "pepper-seeds",
+      "description": "A packet of pepper seeds.",
+      "imageUrl": "https://images.unsplash.com/photo-1716267075248-2af6d8c9a283?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXBwZXIlMjBzZWVkc3xlbnwwfHx8fDE3NjIyMDM5MzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pepper seeds"
+    },
+    {
+      "id": "cucumber-seeds",
+      "description": "A packet of cucumber seeds.",
+      "imageUrl": "https://images.unsplash.com/photo-1628444756299-46a00d854826?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjdWN1bWJlciUyMHNlZWRzfGVufDB8fHx8MTc2MjIwMzkzM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cucumber seeds"
+    }
+  ]
 }
