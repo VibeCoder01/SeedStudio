@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { BookText, Calendar, Settings, Sprout, Leaf } from 'lucide-react';
+import { BookText, Calendar, Settings, Sprout, Leaf, LayoutDashboard } from 'lucide-react';
 import {
   Sidebar,
   SidebarHeader,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 
 const navItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/inventory', icon: Sprout, label: 'Inventory' },
   { href: '/logs', icon: BookText, label: 'Logs' },
   { href: '/schedule', icon: Calendar, label: 'Schedule' },
