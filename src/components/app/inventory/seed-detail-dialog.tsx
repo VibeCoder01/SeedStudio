@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import type { Seed, TaskType, ScheduledTask } from '@/lib/types';
+import type { Seed, ScheduledTask } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,14 +26,11 @@ interface SeedDetailDialogProps {
 
 export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDetailDialogProps) {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
+  const [, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   const { allTasks } = useTasks();
 
-  if (!seed) return null;
-
-  const imageData = PlaceHolderImages.find((img) => img.id === seed.imageId) || PlaceHolderImages[0];
-  
   const handleEditClick = useCallback(() => {
+    if (!seed) return;
     onOpenChange(false); // Close this dialog
     onEdit(seed); // Open the edit dialog
   }, [onOpenChange, onEdit, seed]);
@@ -48,6 +45,12 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
     setScheduledTasks(currentTasks => [...currentTasks, newScheduledTask]);
   }, [setScheduledTasks]);
 
+  if (!seed) {
+    return null;
+  }
+  
+  const imageData = PlaceHolderImages.find((img) => img.id === seed.imageId) || PlaceHolderImages[0];
+  
   const scheduleTaskTemplate: Partial<ScheduledTask> = {
     notes: `Task for ${seed.name}`,
   };
