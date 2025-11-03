@@ -18,7 +18,7 @@ const config: Config = {
   },
   preset: 'ts-jest',
   transformIgnorePatterns: [
-    '/node_modules/(?!lucide-react)/',
+    'node_modules/(?!(lucide-react)/)',
   ],
 };
 
