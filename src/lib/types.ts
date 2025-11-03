@@ -1,3 +1,4 @@
+
 export interface Seed {
   id: string;
   name: string;
@@ -21,7 +22,7 @@ export interface LogEntry {
   taskId: string;
   date: string; // ISO string
   notes: string;
-  photo?: string; // Data URL of the photo
+  photoId?: string; // ID referencing an image in IndexedDB
   seedId?: string;
   quantity?: number;
 }

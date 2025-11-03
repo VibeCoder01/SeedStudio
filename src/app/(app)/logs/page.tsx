@@ -1,8 +1,9 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, ArrowUpDown, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
 import type { LogEntry, TaskType, Seed } from '@/lib/types';
@@ -38,6 +39,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { deleteImage } from '@/lib/idb';
+import { LogPhoto } from '@/components/app/logs/log-photo';
 
 type SortKey = 'task' | 'date';
 
@@ -49,7 +52,7 @@ export default function LogsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState<string | undefined>(undefined);
+  const [viewingPhotoId, setViewingPhotoId] = useState<string | undefined>(undefined);
   const [editingLog, setEditingLog] = useState<LogEntry | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
@@ -75,12 +78,16 @@ export default function LogsPage() {
     setDialogOpen(true);
   };
   
-  const handleViewPhoto = (photoUrl: string) => {
-    setViewingPhoto(photoUrl);
+  const handleViewPhoto = (photoId: string) => {
+    setViewingPhotoId(photoId);
     setPhotoDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const logToDelete = logs.find(log => log.id === id);
+    if (logToDelete?.photoId) {
+      await deleteImage(logToDelete.photoId);
+    }
     setLogs(logs.filter((log) => log.id !== id));
     toast({
       title: 'Log Deleted',
@@ -203,8 +210,8 @@ export default function LogsPage() {
                       <TableCell>{format(new Date(log.date), 'PPP')}</TableCell>
                       <TableCell className="max-w-xs truncate">{log.notes || '–'}</TableCell>
                       <TableCell>
-                        {log.photo ? (
-                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleViewPhoto(log.photo!)}>
+                        {log.photoId ? (
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleViewPhoto(log.photoId!)}>
                             <ImageIcon className="h-4 w-4" />
                           </Button>
                         ) : '–'}
@@ -268,11 +275,7 @@ export default function LogsPage() {
           <DialogHeader>
             <DialogTitle>Log Photo</DialogTitle>
           </DialogHeader>
-          {viewingPhoto && (
-            <div className="relative mt-4 w-full aspect-video">
-              <Image src={viewingPhoto} alt="Log photo" fill className="rounded-md object-contain" />
-            </div>
-          )}
+          {viewingPhotoId && <LogPhoto photoId={viewingPhotoId} />}
         </DialogContent>
       </Dialog>
     </>

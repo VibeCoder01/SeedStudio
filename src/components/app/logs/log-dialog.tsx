@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -42,12 +43,13 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { addImage, getImage, deleteImage } from '@/lib/idb';
 
 const formSchema = z.object({
   taskId: z.string().min(1, 'Please select an activity.'),
   date: z.date({ required_error: 'A date is required.' }),
   notes: z.string().optional(),
-  photo: z.string().optional(),
+  photoId: z.string().optional(),
   seedId: z.string().optional(),
   quantity: z.coerce.number().optional(),
 });
@@ -73,6 +75,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
   });
 
   const taskId = useWatch({ control: form.control, name: 'taskId' });
+  const currentPhotoId = useWatch({ control: form.control, name: 'photoId' });
 
   useEffect(() => {
     if (isOpen) {
@@ -80,41 +83,56 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
         taskId: log?.taskId || '',
         date: log?.date ? new Date(log.date) : new Date(),
         notes: log?.notes || '',
-        photo: log?.photo || '',
+        photoId: log?.photoId || '',
         seedId: log?.seedId || '',
         quantity: log?.quantity || 0,
       });
-      setPhotoPreview(log?.photo);
-    } else {
-        // Reset preview when dialog closes
+
+      if (log?.photoId) {
+        getImage(log.photoId).then(setPhotoPreview);
+      } else {
         setPhotoPreview(undefined);
+      }
+    } else {
+      setPhotoPreview(undefined);
     }
   }, [log, form, isOpen]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+    if (file.size > 4 * 1024 * 1024) { // 4MB limit for IndexedDB
         toast({
             variant: 'destructive',
             title: 'File too large',
-            description: 'Please select an image smaller than 2MB.',
+            description: 'Please select an image smaller than 4MB.',
         });
         return;
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         const dataUrl = e.target?.result as string;
-        form.setValue('photo', dataUrl);
+        
+        // If there's an old photo, remove it from DB
+        if (currentPhotoId) {
+          await deleteImage(currentPhotoId);
+        }
+
+        const newId = crypto.randomUUID();
+        await addImage(newId, dataUrl);
+        form.setValue('photoId', newId);
         setPhotoPreview(dataUrl);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleRemovePhoto = () => {
-    form.setValue('photo', undefined);
+  const handleRemovePhoto = async () => {
+    if (currentPhotoId) {
+      await deleteImage(currentPhotoId);
+    }
+    form.setValue('photoId', undefined);
     setPhotoPreview(undefined);
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -127,7 +145,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       taskId: data.taskId,
       date: data.date.toISOString(),
       notes: data.notes || '',
-      photo: data.photo,
+      photoId: data.photoId,
       seedId: data.seedId,
       quantity: data.quantity,
     };
@@ -186,7 +204,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a seed" />
-                          </SelectTrigger>
+                          </Trigger>
                         </FormControl>
                         <SelectContent>
                           {seeds.map((seed) => (
@@ -265,7 +283,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
             />
             <FormField
               control={form.control}
-              name="photo"
+              name="photoId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Photo</FormLabel>
@@ -304,7 +322,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     </div>
                   )}
                   <FormDescription>
-                    Optional: Attach a photo to this log entry (max 2MB).
+                    Optional: Attach a photo to this log entry (max 4MB).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
