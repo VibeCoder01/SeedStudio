@@ -94,7 +94,6 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
   const onSubmit = (data: SeedFormValues) => {
     const newSeed: Seed = {
       id: seed?.id || crypto.randomUUID(),
-      ...seed,
       ...data,
       notes: data.notes || '',
     };
