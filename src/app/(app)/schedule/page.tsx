@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Edit, Trash2, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit, Trash2, CheckCircle2, MoreVertical } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { DEFAULT_TASK_TYPES } from '@/lib/data';
-import type { ScheduledTask, TaskType, LogEntry } from '@/lib/types';
+import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
+import type { ScheduledTask, TaskType, LogEntry, Seed } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -31,11 +31,13 @@ import { ScheduleDialog } from '@/components/app/schedule/schedule-dialog';
 import { LogDialog } from '@/components/app/logs/log-dialog';
 import { isAfter, subDays, differenceInDays, isPast } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export default function SchedulePage() {
   const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
+  const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
   const { toast } = useToast();
 
@@ -75,16 +77,31 @@ export default function SchedulePage() {
   };
 
   const handleLogSave = (log: LogEntry) => {
-    setLogs([log, ...logs]);
+    const existingLogIndex = logs.findIndex(l => l.id === log.id);
+    if (existingLogIndex > -1) {
+       setLogs(logs.map((l, index) => index === existingLogIndex ? log : l));
+    } else {
+       setLogs([log, ...logs]);
+    }
   };
   
   const handleCompleteTask = (task: ScheduledTask) => {
-    setLogTemplate({
+     const newLog: LogEntry = {
+      id: crypto.randomUUID(),
       taskId: task.taskId,
-      notes: `Completed from schedule: ${getTaskById(task.taskId)?.name}`,
       date: new Date().toISOString(),
-    });
-    setLogDialogOpen(true);
+      notes: `Completed from schedule: ${getTaskById(task.taskId)?.name}`,
+    };
+    setLogs(logs => [newLog, ...logs]);
+    toast({
+        title: "Task Completed!",
+        description: `Logged "${getTaskById(task.taskId)?.name}".`,
+        action: (
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/logs">View Log</Link>
+          </Button>
+        ),
+      });
   };
 
   const isTaskOverdue = (task: ScheduledTask): boolean => {
@@ -209,6 +226,7 @@ export default function SchedulePage() {
         onSave={handleLogSave}
         log={logTemplate}
         tasks={allTasks}
+        seeds={seeds}
        />
     </>
   );

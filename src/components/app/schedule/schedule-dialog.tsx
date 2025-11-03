@@ -51,7 +51,7 @@ interface ScheduleDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (task: ScheduledTask) => void;
-  scheduledTask?: ScheduledTask;
+  scheduledTask?: Partial<ScheduledTask>;
   tasks: TaskType[];
 }
 
@@ -82,7 +82,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
     onSave(newScheduledTask);
     onOpenChange(false);
     toast({
-      title: scheduledTask ? 'Task Updated' : 'Task Scheduled',
+      title: scheduledTask?.id ? 'Task Updated' : 'Task Scheduled',
       description: 'Your task schedule has been updated.',
     });
   };
@@ -91,9 +91,9 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{scheduledTask ? 'Edit Scheduled Task' : 'Add New Scheduled Task'}</DialogTitle>
+          <DialogTitle>{scheduledTask?.id ? 'Edit Scheduled Task' : 'Add New Scheduled Task'}</DialogTitle>
           <DialogDescription>
-            {scheduledTask ? 'Update the details for this task.' : 'Set up a new recurring task.'}
+            {scheduledTask?.id ? 'Update the details for this task.' : 'Set up a new recurring task.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

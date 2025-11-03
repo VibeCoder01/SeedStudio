@@ -100,10 +100,18 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     };
     onSave(newSeed);
     onOpenChange(false);
+    
     toast({
       title: seed ? 'Seed Updated' : 'Seed Added',
       description: `${data.name} has been saved successfully.`,
     });
+    
+    if (seed && seed.stock >= 10 && newSeed.stock < 10) {
+       toast({
+        title: 'Low Stock Alert',
+        description: `${newSeed.name} is running low.`,
+      });
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import type { Seed } from '@/lib/types';
+import type { Seed, TaskType } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +11,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Edit } from 'lucide-react';
+import { Edit, CalendarPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { ScheduleDialog } from '../schedule/schedule-dialog';
+import type { ScheduledTask } from '@/lib/types';
+import { DEFAULT_TASK_TYPES } from '@/lib/data';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface SeedDetailDialogProps {
   isOpen: boolean;
@@ -22,6 +27,11 @@ interface SeedDetailDialogProps {
 }
 
 export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDetailDialogProps) {
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
+  const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
+  const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
+
   if (!seed) return null;
 
   const imageData = PlaceHolderImages.find((img) => img.id === seed.imageId) || PlaceHolderImages[0];
@@ -31,7 +41,21 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
     onEdit(seed); // Open the edit dialog
   };
 
+  const handleScheduleClick = () => {
+    onOpenChange(false); // Close this dialog
+    setScheduleDialogOpen(true);
+  };
+
+  const handleScheduleSave = (task: ScheduledTask) => {
+    setScheduledTasks([...scheduledTasks, task]);
+  };
+
+  const scheduleTaskTemplate: Partial<ScheduledTask> = {
+    notes: `Task for ${seed.name}`,
+  };
+
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -73,12 +97,24 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
                 <p className="text-muted-foreground whitespace-pre-wrap">{seed.notes || 'No notes for this seed.'}</p>
             </div>
         </div>
-        <DialogFooter>
-            <Button variant="outline" onClick={handleEditClick}>
+        <DialogFooter className="justify-between">
+            <Button variant="outline" onClick={handleScheduleClick}>
+                <CalendarPlus className="mr-2 h-4 w-4" /> Schedule Task
+            </Button>
+            <Button variant="default" onClick={handleEditClick}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ScheduleDialog
+        isOpen={scheduleDialogOpen}
+        onOpenChange={setScheduleDialogOpen}
+        onSave={handleScheduleSave}
+        scheduledTask={scheduleTaskTemplate}
+        tasks={allTasks}
+    />
+    </>
   );
 }

@@ -22,6 +22,8 @@ export interface LogEntry {
   date: string; // ISO string
   notes: string;
   photo?: string; // Data URL of the photo
+  seedId?: string;
+  quantity?: number;
 }
 
 export type Recurrence = 'daily' | 'weekly' | 'bi-weekly' | 'monthly';

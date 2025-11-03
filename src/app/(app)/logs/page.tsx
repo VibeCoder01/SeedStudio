@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Plus, Edit, Trash2, Search, ArrowUpDown, Image as ImageIcon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { DEFAULT_TASK_TYPES } from '@/lib/data';
-import type { LogEntry, TaskType } from '@/lib/types';
+import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
+import type { LogEntry, TaskType, Seed } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ type SortKey = 'task' | 'date';
 export default function LogsPage() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const [customTasks] = useLocalStorage<TaskType[]>('customTasks', []);
+  const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,6 +58,11 @@ export default function LogsPage() {
 
   const getTaskById = (taskId: string) => {
     return allTasks.find((task) => task.id === taskId);
+  };
+  
+  const getSeedById = (seedId?: string) => {
+    if (!seedId) return undefined;
+    return seeds.find((seed) => seed.id === seedId);
   };
 
   const handleAdd = () => {
@@ -87,6 +93,21 @@ export default function LogsPage() {
       setLogs(logs.map((l) => (l.id === log.id ? log : l)));
     } else {
       setLogs([log, ...logs]); // Add new log to the top
+    }
+
+    if (log.taskId === 'planting' && log.seedId && log.quantity) {
+      const plantedSeed = getSeedById(log.seedId);
+      if (plantedSeed) {
+        const newStock = plantedSeed.stock - log.quantity;
+        setSeeds(seeds.map(s => s.id === log.seedId ? {...s, stock: newStock} : s));
+        
+        if (newStock < 10 && plantedSeed.stock >= 10) {
+           toast({
+            title: 'Low Stock Alert',
+            description: `${plantedSeed.name} is running low.`,
+          });
+        }
+      }
     }
   };
 
@@ -120,8 +141,10 @@ export default function LogsPage() {
     }
     return sortableItems.filter(log => {
       const task = getTaskById(log.taskId);
+      const seed = getSeedById(log.seedId);
       return (task?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              log.notes?.toLowerCase().includes(searchTerm.toLowerCase()))
+              log.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              seed?.name.toLowerCase().includes(searchTerm.toLowerCase()))
     });
   }, [logs, searchTerm, sortConfig]);
 
@@ -138,7 +161,7 @@ export default function LogsPage() {
              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search logs by activity or notes..."
+                  placeholder="Search logs by activity, notes, or seed..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -237,6 +260,7 @@ export default function LogsPage() {
         onSave={handleSave}
         log={editingLog}
         tasks={allTasks}
+        seeds={seeds}
       />
       
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>

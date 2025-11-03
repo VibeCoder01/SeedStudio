@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Upload, X } from 'lucide-react';
-import type { LogEntry, TaskType } from '@/lib/types';
+import type { LogEntry, TaskType, Seed } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,8 @@ const formSchema = z.object({
   date: z.date({ required_error: 'A date is required.' }),
   notes: z.string().optional(),
   photo: z.string().optional(),
+  seedId: z.string().optional(),
+  quantity: z.coerce.number().optional(),
 });
 
 type LogFormValues = z.infer<typeof formSchema>;
@@ -58,9 +60,10 @@ interface LogDialogProps {
   onSave: (log: LogEntry) => void;
   log?: Partial<LogEntry>;
   tasks: TaskType[];
+  seeds?: Seed[];
 }
 
-export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialogProps) {
+export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: LogDialogProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | undefined>(undefined);
@@ -69,6 +72,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
     resolver: zodResolver(formSchema),
   });
 
+  const taskId = useWatch({ control: form.control, name: 'taskId' });
+
   useEffect(() => {
     if (isOpen) {
       form.reset({
@@ -76,6 +81,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
         date: log?.date ? new Date(log.date) : new Date(),
         notes: log?.notes || '',
         photo: log?.photo || '',
+        seedId: log?.seedId || '',
+        quantity: log?.quantity || 0,
       });
       setPhotoPreview(log?.photo);
     } else {
@@ -121,6 +128,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
       date: data.date.toISOString(),
       notes: data.notes || '',
       photo: data.photo,
+      seedId: data.seedId,
+      quantity: data.quantity,
     };
     onSave(newLog);
     onOpenChange(false);
@@ -165,6 +174,47 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
                 </FormItem>
               )}
             />
+            {taskId === 'planting' && seeds && (
+              <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                  control={form.control}
+                  name="seedId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seed</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a seed" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {seeds.map((seed) => (
+                            <SelectItem key={seed.id} value={seed.id}>
+                              {seed.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             <FormField
               control={form.control}
               name="date"
