@@ -4,6 +4,7 @@ export interface Seed {
   source: string;
   stock: number;
   imageId: string;
+  notes: string;
 }
 
 export interface TaskType {

@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, Trash2, Tag, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, Tag, Upload, Download, Sun, Moon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
 import type { TaskType, Seed, LogEntry, ScheduledTask } from '@/lib/types';
@@ -32,7 +32,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-
+import { Label } from '@/components/ui/label';
+import { useTheme } from '@/hooks/use-theme';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Task name must be at least 2 characters.'),
@@ -48,6 +49,7 @@ export default function SettingsPage() {
   
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { theme, setTheme } = useTheme();
 
   const form = useForm<CustomTaskFormValues>({
     resolver: zodResolver(formSchema),
@@ -162,8 +164,35 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" />
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
+            <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>
+                Customize the look and feel of the application.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div>
+                  <Label>Theme</Label>
+                   <div className="flex items-center space-x-2 mt-2">
+                    <Button
+                      variant={theme === 'light' ? 'default' : 'outline'}
+                      onClick={() => setTheme('light')}
+                    >
+                      <Sun className="mr-2" /> Light
+                    </Button>
+                    <Button
+                      variant={theme === 'dark' ? 'default' : 'outline'}
+                      onClick={() => setTheme('dark')}
+                    >
+                       <Moon className="mr-2" /> Dark
+                    </Button>
+                  </div>
+               </div>
+            </CardContent>
+        </Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Custom Task Types</CardTitle>
             <CardDescription>
@@ -246,7 +275,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle>Data Management</CardTitle>
                 <CardDescription>
@@ -261,51 +290,52 @@ export default function SettingsPage() {
                     </p>
                 </div>
                 <Separator />
-                <div>
-                    <h3 className="text-base font-medium">Export Data</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                        Download all your application data into a single JSON file for backup.
-                    </p>
-                    <Button variant="outline" onClick={handleExport}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export to JSON
-                    </Button>
-                </div>
-                <Separator />
-                <div>
-                     <h3 className="text-base font-medium">Import Data</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                       Restore your data from a previously exported JSON backup file.
-                    </p>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Import from JSON
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to import?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will overwrite all current data in the application. This action cannot be undone.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleImportClick}>
-                                Yes, Import Data
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept=".json"
-                        onChange={handleFileChange}
-                    />
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <h3 className="text-base font-medium">Export Data</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                            Download all your application data into a single JSON file for backup.
+                        </p>
+                        <Button variant="outline" onClick={handleExport}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Export to JSON
+                        </Button>
+                    </div>
+                    <div>
+                         <h3 className="text-base font-medium">Import Data</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                           Restore your data from a previously exported JSON backup file.
+                        </p>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Import from JSON
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure you want to import?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will overwrite all current data in the application. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleImportClick}>
+                                    Yes, Import Data
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept=".json"
+                            onChange={handleFileChange}
+                        />
+                    </div>
                 </div>
             </CardContent>
         </Card>

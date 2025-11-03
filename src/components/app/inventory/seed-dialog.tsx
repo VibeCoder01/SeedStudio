@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 
 const formSchema = z.object({
@@ -38,6 +39,7 @@ const formSchema = z.object({
   source: z.string().min(2, { message: 'Source must be at least 2 characters.' }),
   stock: z.coerce.number().int().min(0, { message: 'Stock must be a positive number.' }),
   imageId: z.string().min(1, { message: 'Please select an image.' }),
+  notes: z.string().optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -58,6 +60,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       source: '',
       stock: 0,
       imageId: '',
+      notes: '',
     },
   });
 
@@ -70,6 +73,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         source: '',
         stock: 0,
         imageId: '',
+        notes: '',
       });
     }
   }, [seed, form, isOpen]);
@@ -77,6 +81,8 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
   const onSubmit = (data: SeedFormValues) => {
     const newSeed: Seed = {
       id: seed?.id || crypto.randomUUID(),
+      notes: '',
+      ...seed,
       ...data,
     };
     onSave(newSeed);
@@ -157,6 +163,19 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Planting instructions, tips, etc." {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

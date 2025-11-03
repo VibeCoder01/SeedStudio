@@ -17,6 +17,7 @@ export const INITIAL_SEEDS: Seed[] = [
     source: 'Garden Center',
     stock: 50,
     imageId: 'tomato-seeds',
+    notes: 'Plant in full sun, 24-36 inches apart. Water consistently.',
   },
   {
     id: 'carrot-seeds-1',
@@ -24,6 +25,7 @@ export const INITIAL_SEEDS: Seed[] = [
     source: 'Online Retailer',
     stock: 100,
     imageId: 'carrot-seeds',
+    notes: 'Sow seeds thinly in rows, 1/2 inch deep. Prefers loose, sandy soil.',
   },
   {
     id: 'lettuce-seeds-1',
@@ -31,6 +33,7 @@ export const INITIAL_SEEDS: Seed[] = [
     source: 'Seed Swap',
     stock: 75,
     imageId: 'lettuce-seeds',
+    notes: 'A cool-weather crop. Plant in early spring or fall.',
   },
     {
     id: 'basil-seeds-1',
@@ -38,5 +41,6 @@ export const INITIAL_SEEDS: Seed[] = [
     source: 'Local Farm',
     stock: 200,
     imageId: 'basil-seeds',
+    notes: 'Loves heat. Plant after the last frost. Pinch back leaves to encourage bushy growth.',
   }
 ];

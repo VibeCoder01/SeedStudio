@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES } from '@/lib/data';
 import type { LogEntry, TaskType } from '@/lib/types';
@@ -30,6 +30,9 @@ import {
 import { LogDialog } from '@/components/app/logs/log-dialog';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+
+type SortKey = 'task' | 'date';
 
 export default function LogsPage() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
@@ -38,10 +41,13 @@ export default function LogsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<LogEntry | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
+
   const { toast } = useToast();
 
   const getTaskById = (taskId: string) => {
-    return allTasks.find(task => task.id === taskId);
+    return allTasks.find((task) => task.id === taskId);
   };
 
   const handleAdd = () => {
@@ -66,10 +72,42 @@ export default function LogsPage() {
     if (editingLog) {
       setLogs(logs.map((l) => (l.id === log.id ? log : l)));
     } else {
-      setLogs([...logs, log].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      setLogs([...logs, log]);
     }
   };
+
+  const requestSort = (key: SortKey) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
   
+  const sortedAndFilteredLogs = useMemo(() => {
+    let sortableItems = [...logs];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        if (sortConfig.key === 'task') {
+          const taskA = getTaskById(a.taskId)?.name || '';
+          const taskB = getTaskById(b.taskId)?.name || '';
+          if (taskA < taskB) return sortConfig.direction === 'ascending' ? -1 : 1;
+          if (taskA > taskB) return sortConfig.direction === 'ascending' ? 1 : -1;
+          return 0;
+        } else { // date
+           if (new Date(a.date) < new Date(b.date)) return sortConfig.direction === 'ascending' ? -1 : 1;
+           if (new Date(a.date) > new Date(b.date)) return sortConfig.direction === 'ascending' ? 1 : -1;
+           return 0;
+        }
+      });
+    }
+    return sortableItems.filter(log => {
+      const task = getTaskById(log.taskId);
+      return (task?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              log.notes?.toLowerCase().includes(searchTerm.toLowerCase()))
+    });
+  }, [logs, searchTerm, sortConfig]);
+
   return (
     <>
       <PageHeader title="Garden Logs">
@@ -79,19 +117,38 @@ export default function LogsPage() {
         </Button>
       </PageHeader>
       <Card>
+        <CardContent className="p-4">
+             <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search logs by activity or notes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+        </CardContent>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Activity</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort('task')}>
+                    Activity <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => requestSort('date')}>
+                    Date <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.length > 0 ? (
-                logs.map((log) => {
+              {sortedAndFilteredLogs.length > 0 ? (
+                sortedAndFilteredLogs.map((log) => {
                   const task = getTaskById(log.taskId);
                   const Icon = task?.icon;
                   return (
@@ -140,7 +197,7 @@ export default function LogsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
-                    No logs yet. Start by adding a new log entry.
+                    {searchTerm ? `No logs match your search for "${searchTerm}".` : 'No logs yet. Start by adding a new log entry.'}
                   </TableCell>
                 </TableRow>
               )}
