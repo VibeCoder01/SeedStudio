@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Edit } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface SeedDetailDialogProps {
   isOpen: boolean;
@@ -46,10 +47,26 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
           <DialogTitle className="text-2xl font-headline">{seed.name}</DialogTitle>
           <DialogDescription>From {seed.source}</DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-            <div>
-                <h4 className="font-semibold">Stock Level</h4>
-                <p>{seed.stock}</p>
+        <div className="py-4 space-y-4 max-h-[50vh] overflow-y-auto pr-4">
+            <div className="flex items-center gap-4">
+                <div>
+                    <h4 className="font-semibold">Stock Level</h4>
+                    <p>{seed.stock}</p>
+                </div>
+            </div>
+             <div className="grid grid-cols-3 gap-4">
+                <div>
+                    <h4 className="font-semibold">Planting Depth</h4>
+                    <p>{seed.plantingDepth || 'N/A'}</p>
+                </div>
+                <div>
+                    <h4 className="font-semibold">Germination</h4>
+                    <p>{seed.daysToGermination ? `${seed.daysToGermination} days` : 'N/A'}</p>
+                </div>
+                <div>
+                    <h4 className="font-semibold">Harvest</h4>
+                    <p>{seed.daysToHarvest ? `${seed.daysToHarvest} days` : 'N/A'}</p>
+                </div>
             </div>
             <div>
                 <h4 className="font-semibold">Notes</h4>

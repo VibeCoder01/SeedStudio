@@ -40,6 +40,9 @@ const formSchema = z.object({
   stock: z.coerce.number().int().min(0, { message: 'Stock must be a positive number.' }),
   imageId: z.string().min(1, { message: 'Please select an image.' }),
   notes: z.string().optional(),
+  plantingDepth: z.string().optional(),
+  daysToGermination: z.coerce.number().int().min(0).optional(),
+  daysToHarvest: z.coerce.number().int().min(0).optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -61,12 +64,19 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       stock: 0,
       imageId: '',
       notes: '',
+      plantingDepth: '',
+      daysToGermination: 0,
+      daysToHarvest: 0,
     },
   });
 
   useEffect(() => {
     if (seed) {
-      form.reset(seed);
+      form.reset({
+        ...seed,
+        daysToGermination: seed.daysToGermination ?? 0,
+        daysToHarvest: seed.daysToHarvest ?? 0,
+      });
     } else {
       form.reset({
         name: '',
@@ -74,6 +84,9 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         stock: 0,
         imageId: '',
         notes: '',
+        plantingDepth: '',
+        daysToGermination: 0,
+        daysToHarvest: 0,
       });
     }
   }, [seed, form, isOpen]);
@@ -81,9 +94,9 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
   const onSubmit = (data: SeedFormValues) => {
     const newSeed: Seed = {
       id: seed?.id || crypto.randomUUID(),
-      notes: '',
       ...seed,
       ...data,
+      notes: data.notes || '',
     };
     onSave(newSeed);
     onOpenChange(false);
@@ -95,7 +108,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{seed ? 'Edit Seed' : 'Add New Seed'}</DialogTitle>
           <DialogDescription>
@@ -103,7 +116,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <FormField
               control={form.control}
               name="name"
@@ -167,6 +180,47 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="plantingDepth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Planting Depth</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 1/4 inch" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="daysToGermination"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Germination</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 7" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="daysToHarvest"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Harvest</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 60" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
              <FormField
               control={form.control}
               name="notes"

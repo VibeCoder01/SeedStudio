@@ -1,10 +1,11 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Upload, X } from 'lucide-react';
 import type { LogEntry, TaskType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -39,11 +41,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 const formSchema = z.object({
   taskId: z.string().min(1, 'Please select an activity.'),
   date: z.date({ required_error: 'A date is required.' }),
   notes: z.string().optional(),
+  photo: z.string().optional(),
 });
 
 type LogFormValues = z.infer<typeof formSchema>;
@@ -58,6 +62,9 @@ interface LogDialogProps {
 
 export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialogProps) {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | undefined>(undefined);
+
   const form = useForm<LogFormValues>({
     resolver: zodResolver(formSchema),
   });
@@ -68,9 +75,44 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
         taskId: log?.taskId || '',
         date: log ? new Date(log.date) : new Date(),
         notes: log?.notes || '',
+        photo: log?.photo || '',
       });
+      setPhotoPreview(log?.photo);
+    } else {
+        // Reset preview when dialog closes
+        setPhotoPreview(undefined);
     }
   }, [log, form, isOpen]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+            variant: 'destructive',
+            title: 'File too large',
+            description: 'Please select an image smaller than 2MB.',
+        });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        form.setValue('photo', dataUrl);
+        setPhotoPreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    form.setValue('photo', undefined);
+    setPhotoPreview(undefined);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
 
   const onSubmit = (data: LogFormValues) => {
     const newLog: LogEntry = {
@@ -78,6 +120,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
       taskId: data.taskId,
       date: data.date.toISOString(),
       notes: data.notes || '',
+      photo: data.photo,
     };
     onSave(newLog);
     onOpenChange(false);
@@ -89,7 +132,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{log ? 'Edit Log Entry' : 'Add New Log Entry'}</DialogTitle>
           <DialogDescription>
@@ -97,7 +140,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <FormField
               control={form.control}
               name="taskId"
@@ -166,6 +209,53 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks }: LogDialo
                   <FormControl>
                     <Textarea placeholder="Any details about the activity..." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="photo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Photo</FormLabel>
+                  <FormControl>
+                    <>
+                      <Input 
+                        type="file" 
+                        className="hidden"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                       <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={!!photoPreview}
+                        >
+                           <Upload className="mr-2 h-4 w-4" />
+                           Upload Photo
+                       </Button>
+                    </>
+                  </FormControl>
+                   {photoPreview && (
+                    <div className="mt-2 relative w-full h-48">
+                      <Image src={photoPreview} alt="Preview" fill className="rounded-md object-cover" />
+                       <Button 
+                          type="button" 
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={handleRemovePhoto}
+                        >
+                          <X className="h-4 w-4" />
+                       </Button>
+                    </div>
+                  )}
+                  <FormDescription>
+                    Optional: Attach a photo to this log entry (max 2MB).
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

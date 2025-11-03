@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Edit, Trash2, Search, ArrowUpDown } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Edit, Trash2, Search, ArrowUpDown, Image as ImageIcon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES } from '@/lib/data';
 import type { LogEntry, TaskType } from '@/lib/types';
@@ -31,6 +32,12 @@ import { LogDialog } from '@/components/app/logs/log-dialog';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type SortKey = 'task' | 'date';
 
@@ -40,6 +47,8 @@ export default function LogsPage() {
   const allTasks = [...DEFAULT_TASK_TYPES, ...customTasks];
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState<string | undefined>(undefined);
   const [editingLog, setEditingLog] = useState<LogEntry | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
@@ -59,6 +68,11 @@ export default function LogsPage() {
     setEditingLog(log);
     setDialogOpen(true);
   };
+  
+  const handleViewPhoto = (photoUrl: string) => {
+    setViewingPhoto(photoUrl);
+    setPhotoDialogOpen(true);
+  };
 
   const handleDelete = (id: string) => {
     setLogs(logs.filter((log) => log.id !== id));
@@ -72,7 +86,7 @@ export default function LogsPage() {
     if (editingLog) {
       setLogs(logs.map((l) => (l.id === log.id ? log : l)));
     } else {
-      setLogs([...logs, log]);
+      setLogs([log, ...logs]); // Add new log to the top
     }
   };
 
@@ -95,11 +109,14 @@ export default function LogsPage() {
           if (taskA > taskB) return sortConfig.direction === 'ascending' ? 1 : -1;
           return 0;
         } else { // date
-           if (new Date(a.date) < new Date(b.date)) return sortConfig.direction === 'ascending' ? -1 : 1;
-           if (new Date(a.date) > new Date(b.date)) return sortConfig.direction === 'ascending' ? 1 : -1;
+           if (new Date(a.date) < new Date(b.date)) return sortConfig.direction === 'ascending' ? 1 : -1;
+           if (new Date(a.date) > new Date(b.date)) return sortConfig.direction === 'ascending' ? -1 : 1;
            return 0;
         }
       });
+    } else {
+       // Default sort by date descending
+       sortableItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
     return sortableItems.filter(log => {
       const task = getTaskById(log.taskId);
@@ -143,6 +160,7 @@ export default function LogsPage() {
                   </Button>
                 </TableHead>
                 <TableHead>Notes</TableHead>
+                <TableHead>Photo</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -160,7 +178,14 @@ export default function LogsPage() {
                         </div>
                       </TableCell>
                       <TableCell>{format(new Date(log.date), 'PPP')}</TableCell>
-                      <TableCell className="max-w-sm truncate">{log.notes || '–'}</TableCell>
+                      <TableCell className="max-w-xs truncate">{log.notes || '–'}</TableCell>
+                      <TableCell>
+                        {log.photo ? (
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleViewPhoto(log.photo!)}>
+                            <ImageIcon className="h-4 w-4" />
+                          </Button>
+                        ) : '–'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button variant="outline" size="icon" onClick={() => handleEdit(log)}>
@@ -196,7 +221,7 @@ export default function LogsPage() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     {searchTerm ? `No logs match your search for "${searchTerm}".` : 'No logs yet. Start by adding a new log entry.'}
                   </TableCell>
                 </TableRow>
@@ -213,6 +238,19 @@ export default function LogsPage() {
         log={editingLog}
         tasks={allTasks}
       />
+      
+      <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Log Photo</DialogTitle>
+          </DialogHeader>
+          {viewingPhoto && (
+            <div className="relative mt-4 w-full aspect-video">
+              <Image src={viewingPhoto} alt="Log photo" fill className="rounded-md object-contain" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

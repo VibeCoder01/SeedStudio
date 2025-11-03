@@ -5,6 +5,9 @@ export interface Seed {
   stock: number;
   imageId: string;
   notes: string;
+  plantingDepth?: string;
+  daysToGermination?: number;
+  daysToHarvest?: number;
 }
 
 export interface TaskType {
@@ -18,6 +21,7 @@ export interface LogEntry {
   taskId: string;
   date: string; // ISO string
   notes: string;
+  photo?: string; // Data URL of the photo
 }
 
 export type Recurrence = 'daily' | 'weekly' | 'bi-weekly' | 'monthly';

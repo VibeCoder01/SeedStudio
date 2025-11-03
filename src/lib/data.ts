@@ -18,6 +18,9 @@ export const INITIAL_SEEDS: Seed[] = [
     stock: 50,
     imageId: 'tomato-seeds',
     notes: 'Plant in full sun, 24-36 inches apart. Water consistently.',
+    plantingDepth: '1/4 inch',
+    daysToGermination: 7,
+    daysToHarvest: 60,
   },
   {
     id: 'carrot-seeds-1',
@@ -26,6 +29,9 @@ export const INITIAL_SEEDS: Seed[] = [
     stock: 100,
     imageId: 'carrot-seeds',
     notes: 'Sow seeds thinly in rows, 1/2 inch deep. Prefers loose, sandy soil.',
+    plantingDepth: '1/2 inch',
+    daysToGermination: 14,
+    daysToHarvest: 70,
   },
   {
     id: 'lettuce-seeds-1',
@@ -34,6 +40,9 @@ export const INITIAL_SEEDS: Seed[] = [
     stock: 75,
     imageId: 'lettuce-seeds',
     notes: 'A cool-weather crop. Plant in early spring or fall.',
+    plantingDepth: '1/8 inch',
+    daysToGermination: 8,
+    daysToHarvest: 50,
   },
     {
     id: 'basil-seeds-1',
@@ -42,5 +51,8 @@ export const INITIAL_SEEDS: Seed[] = [
     stock: 200,
     imageId: 'basil-seeds',
     notes: 'Loves heat. Plant after the last frost. Pinch back leaves to encourage bushy growth.',
+    plantingDepth: '1/4 inch',
+    daysToGermination: 10,
+    daysToHarvest: 60,
   }
 ];
