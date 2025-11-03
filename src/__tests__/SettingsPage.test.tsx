@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SettingsPage from '@/app/(app)/settings/page';
@@ -7,6 +8,14 @@ import { ToastProvider } from '@/components/ui/toast'; // To prevent context err
 // Mock the useLocalStorage hook
 jest.mock('@/hooks/use-local-storage');
 const mockedUseLocalStorage = useLocalStorage as jest.Mock;
+
+// Mock the useToast hook
+const mockToast = jest.fn();
+jest.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: mockToast,
+  }),
+}));
 
 // Mock the useTheme hook as it's used in SettingsPage
 jest.mock('@/hooks/use-theme', () => ({
@@ -43,11 +52,6 @@ describe('SettingsPage', () => {
         return [customTasks, setCustomTasks];
       }
       return [[], jest.fn()]; // Default mock for other useLocalStorage calls
-    });
-    
-     // Mock toast
-    jest.spyOn(require('@/hooks/use-toast'), 'useToast').mockReturnValue({
-      toast: jest.fn(),
     });
   });
 
@@ -90,6 +94,12 @@ describe('SettingsPage', () => {
     // The mock implementation of setCustomTasks will update our local `customTasks` array.
     expect(customTasks.length).toBe(1);
     expect(customTasks[0].name).toBe('New Test Task');
+    
+    // Check that the toast was called
+    expect(mockToast).toHaveBeenCalledWith({
+      title: 'Custom Task Added',
+      description: '"New Test Task" has been added to your tasks.',
+    });
   });
 
   it('shows an error message for invalid input', async () => {
@@ -112,5 +122,6 @@ describe('SettingsPage', () => {
     
     // Verify that the task was not added
     expect(setCustomTasks).not.toHaveBeenCalled();
+    expect(mockToast).not.toHaveBeenCalled();
   });
 });
