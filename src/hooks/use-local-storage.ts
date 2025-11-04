@@ -36,22 +36,15 @@ export function useLocalStorage<T>(
     if (item) {
       try {
         const parsedValue = JSON.parse(item);
-
-        if (Array.isArray(initialValue)) {
-          const fallbackValue = [...initialValue] as T;
-          setValue(Array.isArray(parsedValue) ? (parsedValue as T) : fallbackValue);
-        } else if (parsedValue === null && initialValue !== null) {
-          setValue(initialValue);
-        } else {
-          setValue(parsedValue as T);
-        }
+        setValue(parsedValue);
       } catch (error) {
         handleError(error, 'read');
-        setValue(Array.isArray(initialValue) ? ([...initialValue] as T) : initialValue);
+        // If parsing fails, we can stick with the initial value
       }
     }
     setIsInitialized(true);
-  }, [key, handleError, initialValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, handleError]);
 
   const setStoredValue = (newValue: T | ((val: T) => T)) => {
     if (!isInitialized) {
