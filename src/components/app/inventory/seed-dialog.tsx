@@ -41,14 +41,14 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   source: z.string().min(2, { message: 'Source must be at least 2 characters.' }),
   packetCount: z.coerce.number().int().min(0, { message: 'Packet count must be a positive number.' }),
-  seedsPerPacket: z.coerce.number().int().min(0).optional(),
+  seedsPerPacket: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   imageId: z.string().min(1, { message: 'Please select an image.' }),
   notes: z.string().optional(),
   plantingDepth: z.string().optional(),
-  daysToGermination: z.coerce.number().int().min(0).optional(),
-  daysToHarvest: z.coerce.number().int().min(0).optional(),
+  daysToGermination: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  daysToHarvest: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   tags: z.array(z.string()).optional(),
-  purchaseYear: z.coerce.number().optional(),
+  purchaseYear: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   isWishlist: z.boolean().default(false),
 });
 
@@ -69,14 +69,14 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       name: '',
       source: '',
       packetCount: 0,
-      seedsPerPacket: undefined,
+      seedsPerPacket: '',
       imageId: '',
       notes: '',
       plantingDepth: '',
-      daysToGermination: undefined,
-      daysToHarvest: undefined,
+      daysToGermination: '',
+      daysToHarvest: '',
       tags: [],
-      purchaseYear: new Date().getFullYear(),
+      purchaseYear: '',
       isWishlist: false,
     },
   });
@@ -85,10 +85,13 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     if (seed) {
       form.reset({
         ...seed,
-        daysToGermination: seed.daysToGermination ?? undefined,
-        daysToHarvest: seed.daysToHarvest ?? undefined,
-        purchaseYear: seed.purchaseYear ?? new Date().getFullYear(),
+        seedsPerPacket: seed.seedsPerPacket ?? '',
+        daysToGermination: seed.daysToGermination ?? '',
+        daysToHarvest: seed.daysToHarvest ?? '',
+        purchaseYear: seed.purchaseYear ?? '',
         tags: seed.tags || [],
+        notes: seed.notes || '',
+        plantingDepth: seed.plantingDepth || '',
         isWishlist: seed.isWishlist ?? false,
       });
     } else {
@@ -96,14 +99,14 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         name: '',
         source: '',
         packetCount: 0,
-        seedsPerPacket: undefined,
+        seedsPerPacket: '',
         imageId: '',
         notes: '',
         plantingDepth: '',
-        daysToGermination: undefined,
-        daysToHarvest: undefined,
+        daysToGermination: '',
+        daysToHarvest: '',
         tags: [],
-        purchaseYear: new Date().getFullYear(),
+        purchaseYear: new Date().getFullYear().toString(),
         isWishlist: false,
       });
     }
@@ -112,9 +115,18 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
   const onSubmit = (data: SeedFormValues) => {
     const newSeed: Seed = {
       id: seed?.id || crypto.randomUUID(),
-      ...data,
+      name: data.name,
+      source: data.source,
+      packetCount: data.packetCount,
+      seedsPerPacket: data.seedsPerPacket,
+      imageId: data.imageId,
       notes: data.notes || '',
+      plantingDepth: data.plantingDepth,
+      daysToGermination: data.daysToGermination,
+      daysToHarvest: data.daysToHarvest,
       tags: data.tags || [],
+      purchaseYear: data.purchaseYear,
+      isWishlist: data.isWishlist,
     };
     onSave(newSeed);
     onOpenChange(false);
