@@ -32,11 +32,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   taskId: z.string().min(1, 'Please select an activity.'),
@@ -78,7 +73,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
       taskId: data.taskId,
       recurrence: data.recurrence,
       notes: data.notes || '',
-      startDate: data.startDate ? data.startDate.toISOString() : undefined,
+      startDate: data.startDate?.toISOString(),
     };
     
     onSave(newScheduledTask);
@@ -125,7 +120,6 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="recurrence"
@@ -146,48 +140,13 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                    Tasks will appear on your schedule based on this recurrence.
+                  </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                   <FormDescription>
-                    Optional: When the task should first appear.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            </div>
             <FormField
               control={form.control}
               name="notes"
