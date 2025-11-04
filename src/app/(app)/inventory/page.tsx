@@ -89,29 +89,18 @@ export default function InventoryPage() {
       return;
     }
 
-    if (normalizedSeeds.length !== rawSeeds.length) {
-      setSeeds(normalizedSeeds);
-      toast({
-        title: 'Inventory Updated',
-        description: 'Invalid items have been removed from your inventory.',
-      });
-      return;
-    }
+    const cleanedSeeds = ensureSeedArray(rawSeeds).map(seed => 
+        Number(seed.packetCount) < 0 ? { ...seed, packetCount: 0 } : seed
+    );
 
-    const hasNegativeStock = normalizedSeeds.some(seed => Number(seed.packetCount) < 0);
-
-    if (hasNegativeStock) {
-      setSeeds(currentSeeds =>
-        ensureSeedArray(currentSeeds).map(seed =>
-          Number(seed.packetCount) < 0 ? { ...seed, packetCount: 0 } : seed
-        )
-      );
-      toast({
-        title: 'Inventory Corrected',
-        description: 'Any items with negative stock have been set to 0.',
-      });
+    if (cleanedSeeds.length !== rawSeeds.length || JSON.stringify(cleanedSeeds) !== JSON.stringify(rawSeeds)) {
+        setSeeds(cleanedSeeds);
+        toast({
+            title: 'Inventory Corrected',
+            description: 'Invalid or negative stock items have been corrected.',
+        });
     }
-  }, [seeds, normalizedSeeds, setSeeds, toast, ensureSeedArray]);
+  }, [seeds, setSeeds, toast, ensureSeedArray]);
 
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
@@ -487,5 +476,3 @@ export default function InventoryPage() {
     </>
   );
 }
-
-    
