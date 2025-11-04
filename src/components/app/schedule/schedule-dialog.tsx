@@ -107,7 +107,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Activity</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an activity" />
@@ -132,11 +132,11 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Recurrence</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select how often" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {recurrences.map((r) => (

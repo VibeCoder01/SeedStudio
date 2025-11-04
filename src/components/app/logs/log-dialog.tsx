@@ -173,7 +173,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Activity</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an activity" />
@@ -199,7 +199,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Seed</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a seed" />

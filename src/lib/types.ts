@@ -29,7 +29,7 @@ export interface LogEntry {
 
 export type Recurrence = 'daily' | 'weekly' | 'bi-weekly' | 'monthly';
 
-export const recurrences: Recurrence[] = ['daily', 'weekly', 'bi-weekly', 'monthly'];
+export const recurrences = ['daily', 'weekly', 'bi-weekly', 'monthly'] as const;
 
 export interface ScheduledTask {
   id: string;

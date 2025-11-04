@@ -169,7 +169,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Image</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an image" />
