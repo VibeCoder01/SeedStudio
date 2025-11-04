@@ -41,6 +41,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 type SortKey = 'name' | 'packetCount';
 
@@ -306,9 +307,13 @@ export default function InventoryPage() {
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
               const totalSeeds = seed.packetCount * (seed.seedsPerPacket || 0);
+              const isLowStock = !seed.isWishlist && seed.packetCount < 10;
 
               return (
-                <Card key={seed.id} className={isSelected ? 'ring-2 ring-primary' : ''}>
+                <Card key={seed.id} className={cn(
+                    isSelected && 'ring-2 ring-primary',
+                    isLowStock && 'border-yellow-500'
+                )}>
                   <CardHeader className="p-0">
                     <div className="relative">
                       <button className="text-left w-full" onClick={() => handleViewDetails(seed)}>
