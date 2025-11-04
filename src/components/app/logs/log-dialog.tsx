@@ -50,8 +50,8 @@ const formSchema = z.object({
   notes: z.string().optional(),
   photoId: z.string().optional(),
   seedId: z.string().optional(),
-  quantity: z.coerce.number().optional(),
-  weight: z.coerce.number().optional(),
+  quantity: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  weight: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
 });
 
 type LogFormValues = z.infer<typeof formSchema>;
@@ -72,6 +72,15 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
 
   const form = useForm<LogFormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      taskId: '',
+      date: new Date(),
+      notes: '',
+      photoId: undefined,
+      seedId: '',
+      quantity: undefined,
+      weight: undefined,
+    }
   });
 
   const taskId = useWatch({ control: form.control, name: 'taskId' });
@@ -85,8 +94,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
         notes: log?.notes || '',
         photoId: log?.photoId || undefined,
         seedId: log?.seedId || '',
-        quantity: log?.quantity || undefined,
-        weight: log?.weight || undefined,
+        quantity: log?.quantity ?? undefined,
+        weight: log?.weight ?? undefined,
       });
 
       if (log?.photoId) {
@@ -232,7 +241,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   <FormItem>
                     <FormLabel>Quantity Planted</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -249,7 +258,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 10" {...field} />
+                        <Input type="number" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -262,7 +271,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     <FormItem>
                       <FormLabel>Weight (lbs)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} />
+                        <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
