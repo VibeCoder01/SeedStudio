@@ -245,7 +245,7 @@ export function JournalDialog({ isOpen, onOpenChange, onSave, entry }: JournalDi
                     ))}
                     </div>
                   <FormControl>
-                    <>
+                    <div>
                       <Input 
                         type="file" 
                         className="hidden"
@@ -263,7 +263,7 @@ export function JournalDialog({ isOpen, onOpenChange, onSave, entry }: JournalDi
                            <Upload className="mr-2 h-4 w-4" />
                            Add Photos
                        </Button>
-                    </>
+                    </div>
                   </FormControl>
                   <FormDescription>
                     You can add multiple photos to an entry (max 4MB each).
