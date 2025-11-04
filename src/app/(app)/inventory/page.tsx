@@ -373,7 +373,7 @@ export default function InventoryPage() {
                             </p>
                             {seed.seedsPerPacket && (
                                 <p className="text-muted-foreground">
-                                    ~{totalSeeds.toLocaleString()} seeds total
+                                    ~{(totalSeeds || 0).toLocaleString()} seeds total
                                 </p>
                             )}
                         </div>
