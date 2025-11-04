@@ -58,43 +58,6 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
 
-  const normalizedSeeds = useMemo(() => {
-    if (!Array.isArray(seeds)) {
-      toast({
-        title: 'Inventory Reset',
-        description: 'Stored inventory data was invalid and has been reset.',
-      });
-      return INITIAL_SEEDS;
-    }
-
-    const cleaned = seeds.map(seed => {
-      if (!seed || typeof seed.id !== 'string' || typeof seed.name !== 'string') {
-        return null;
-      }
-      return {
-        ...seed,
-        packetCount: Number(seed.packetCount) < 0 ? 0 : (seed.packetCount || 0)
-      };
-    }).filter((seed): seed is Seed => seed !== null);
-
-    if (cleaned.length !== seeds.length) {
-       toast({
-            title: 'Inventory Corrected',
-            description: 'Some invalid inventory items were removed or corrected.',
-        });
-    }
-
-    return cleaned;
-  }, [seeds, toast]);
-
-  useEffect(() => {
-    // This effect ensures that if the memoized value differs from the localStorage value,
-    // we update localStorage to match the cleaned version. This should only run once if data is dirty.
-    if (JSON.stringify(normalizedSeeds) !== JSON.stringify(seeds)) {
-      setSeeds(normalizedSeeds);
-    }
-  }, [normalizedSeeds, seeds, setSeeds]);
-
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
     setDialogOpen(true);
@@ -142,15 +105,15 @@ export default function InventoryPage() {
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    normalizedSeeds.forEach(seed => {
+    (seeds || []).forEach(seed => {
       seed.tags?.forEach(tag => tags.add(tag));
     });
     return Array.from(tags).sort();
-  }, [normalizedSeeds]);
+  }, [seeds]);
 
   const sortedAndFilteredSeeds = useMemo(() => {
     const isWishlist = activeTab === 'wishlist';
-    let sortableItems = normalizedSeeds.filter(seed => (seed.isWishlist || false) === isWishlist);
+    let sortableItems = (seeds || []).filter(seed => (seed.isWishlist || false) === isWishlist);
 
     if (sortConfig !== null) {
       sortableItems = [...sortableItems].sort((a, b) => {
@@ -176,7 +139,7 @@ export default function InventoryPage() {
 
       return matchesSearch && matchesTags;
     });
-  }, [normalizedSeeds, searchTerm, sortConfig, selectedTags, activeTab]);
+  }, [seeds, searchTerm, sortConfig, selectedTags, activeTab]);
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return null;
@@ -352,8 +315,8 @@ export default function InventoryPage() {
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
               
-              const packetCount = Number(seed.packetCount) > 0 ? Number(seed.packetCount) : 0;
-              const seedsPerPacket = Number(seed.seedsPerPacket) > 0 ? Number(seed.seedsPerPacket) : 0;
+              const packetCount = Number(seed.packetCount) || 0;
+              const seedsPerPacket = Number(seed.seedsPerPacket) || 0;
               const totalSeeds = packetCount * seedsPerPacket;
               
               const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < 10;
@@ -401,11 +364,11 @@ export default function InventoryPage() {
                             <p>
                                 Packets: <span className="font-bold">{packetCount}</span>
                             </p>
-                            {seed.seedsPerPacket ? (
+                            {seedsPerPacket > 0 && (
                                 <p className="text-muted-foreground">
                                     ~{totalSeeds.toLocaleString()} seeds total
                                 </p>
-                            ) : null}
+                            )}
                         </div>
                     )}
                     {seed.tags && seed.tags.length > 0 && (
