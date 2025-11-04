@@ -35,13 +35,23 @@ export function useLocalStorage<T>(
 
     if (item) {
       try {
-        setValue(JSON.parse(item));
+        const parsedValue = JSON.parse(item);
+
+        if (Array.isArray(initialValue)) {
+          const fallbackValue = [...initialValue] as T;
+          setValue(Array.isArray(parsedValue) ? (parsedValue as T) : fallbackValue);
+        } else if (parsedValue === null && initialValue !== null) {
+          setValue(initialValue);
+        } else {
+          setValue(parsedValue as T);
+        }
       } catch (error) {
         handleError(error, 'read');
+        setValue(Array.isArray(initialValue) ? ([...initialValue] as T) : initialValue);
       }
     }
     setIsInitialized(true);
-  }, [key, handleError]);
+  }, [key, handleError, initialValue]);
 
   const setStoredValue = (newValue: T | ((val: T) => T)) => {
     if (!isInitialized) {

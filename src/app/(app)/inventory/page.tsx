@@ -57,25 +57,61 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
 
-  // One-time effect to sanitize negative inventory values
-  useEffect(() => {
-    const hasNegativeStock = seeds.some(seed => seed.packetCount < 0);
-    if (hasNegativeStock) {
-        setSeeds(currentSeeds =>
-            currentSeeds.map(seed =>
-                seed.packetCount < 0 ? { ...seed, packetCount: 0 } : seed
-            )
-        );
-         toast({
-            title: "Inventory Corrected",
-            description: "Any items with negative stock have been set to 0.",
-        });
-    }
-    // We only want this to run once on mount if data changes from an external source, 
-    // but not on every local change. The stringified seeds is a compromise.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(seeds), setSeeds, toast]);
+  const ensureSeedArray = useCallback(
+    (value: unknown): Seed[] => {
+      if (!Array.isArray(value)) {
+        return [];
+      }
 
+      return value.filter((seed): seed is Seed => {
+        if (!seed || typeof seed !== 'object') {
+          return false;
+        }
+
+        const candidate = seed as Partial<Seed>;
+        return typeof candidate.id === 'string' && typeof candidate.name === 'string';
+      });
+    },
+    []
+  );
+
+  const normalizedSeeds = useMemo(() => ensureSeedArray(seeds), [seeds, ensureSeedArray]);
+
+  useEffect(() => {
+    const rawSeeds = seeds as unknown;
+
+    if (!Array.isArray(rawSeeds)) {
+      setSeeds([...INITIAL_SEEDS]);
+      toast({
+        title: 'Inventory Reset',
+        description: 'Stored inventory data was invalid and has been reset.',
+      });
+      return;
+    }
+
+    if (normalizedSeeds.length !== rawSeeds.length) {
+      setSeeds(normalizedSeeds);
+      toast({
+        title: 'Inventory Updated',
+        description: 'Invalid items have been removed from your inventory.',
+      });
+      return;
+    }
+
+    const hasNegativeStock = normalizedSeeds.some(seed => Number(seed.packetCount) < 0);
+
+    if (hasNegativeStock) {
+      setSeeds(currentSeeds =>
+        ensureSeedArray(currentSeeds).map(seed =>
+          Number(seed.packetCount) < 0 ? { ...seed, packetCount: 0 } : seed
+        )
+      );
+      toast({
+        title: 'Inventory Corrected',
+        description: 'Any items with negative stock have been set to 0.',
+      });
+    }
+  }, [seeds, normalizedSeeds, setSeeds, toast, ensureSeedArray]);
 
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
@@ -93,16 +129,20 @@ export default function InventoryPage() {
   }, []);
 
   const handleDelete = useCallback((id: string) => {
-    setSeeds(currentSeeds => currentSeeds.filter((seed) => seed.id !== id));
-  }, [setSeeds]);
+    setSeeds(currentSeeds =>
+      ensureSeedArray(currentSeeds).filter(seed => seed.id !== id)
+    );
+  }, [setSeeds, ensureSeedArray]);
 
   const handleSave = useCallback((seed: Seed) => {
-    if (editingSeed) {
-      setSeeds(currentSeeds => currentSeeds.map((s) => (s.id === seed.id ? seed : s)));
-    } else {
-      setSeeds(currentSeeds => [...currentSeeds, seed]);
-    }
-  }, [editingSeed, setSeeds]);
+    setSeeds(currentSeeds => {
+      const seedsArray = ensureSeedArray(currentSeeds);
+      if (editingSeed) {
+        return seedsArray.map((s) => (s.id === seed.id ? seed : s));
+      }
+      return [...seedsArray, seed];
+    });
+  }, [editingSeed, setSeeds, ensureSeedArray]);
 
   const getImageData = (imageId: string) => {
     return PlaceHolderImages.find((img) => img.id === imageId) || PlaceHolderImages[0];
@@ -120,18 +160,18 @@ export default function InventoryPage() {
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    seeds.forEach(seed => {
+    normalizedSeeds.forEach(seed => {
       seed.tags?.forEach(tag => tags.add(tag));
     });
     return Array.from(tags).sort();
-  }, [seeds]);
-  
+  }, [normalizedSeeds]);
+
   const sortedAndFilteredSeeds = useMemo(() => {
     const isWishlist = activeTab === 'wishlist';
-    let sortableItems = seeds.filter(seed => (seed.isWishlist || false) === isWishlist);
+    let sortableItems = normalizedSeeds.filter(seed => (seed.isWishlist || false) === isWishlist);
 
     if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
+      sortableItems = [...sortableItems].sort((a, b) => {
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
         if (valA < valB) {
@@ -143,16 +183,18 @@ export default function InventoryPage() {
         return 0;
       });
     }
+
     return sortableItems.filter(seed => {
-        const matchesSearch = seed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          seed.source.toLowerCase().includes(searchTerm.toLowerCase());
-          
-        const matchesTags = selectedTags.length === 0 || 
-          selectedTags.every(tag => seed.tags?.includes(tag));
-          
-        return matchesSearch && matchesTags;
+      const matchesSearch =
+        seed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        seed.source.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesTags =
+        selectedTags.length === 0 || selectedTags.every(tag => seed.tags?.includes(tag));
+
+      return matchesSearch && matchesTags;
     });
-  }, [seeds, searchTerm, sortConfig, selectedTags, activeTab]);
+  }, [normalizedSeeds, searchTerm, sortConfig, selectedTags, activeTab]);
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return null;
@@ -174,12 +216,14 @@ export default function InventoryPage() {
   };
 
   const handleDeleteSelected = useCallback(() => {
-    setSeeds(currentSeeds => currentSeeds.filter(seed => !selectedSeeds.includes(seed.id)));
+    setSeeds(currentSeeds =>
+      ensureSeedArray(currentSeeds).filter(seed => !selectedSeeds.includes(seed.id))
+    );
     toast({
       title: `${selectedSeeds.length} item(s) deleted`,
     });
     setSelectedSeeds([]);
-  }, [selectedSeeds, setSeeds, toast]);
+  }, [selectedSeeds, setSeeds, toast, ensureSeedArray]);
 
   const toggleTagSelection = (tag: string) => {
     setSelectedTags(prev => 
