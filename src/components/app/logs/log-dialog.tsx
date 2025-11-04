@@ -326,7 +326,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                 <FormItem>
                   <FormLabel>Photo</FormLabel>
                   <FormControl>
-                    <>
+                    <div>
                       <Input 
                         type="file" 
                         className="hidden"
@@ -343,7 +343,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                            <Upload className="mr-2 h-4 w-4" />
                            Upload Photo
                        </Button>
-                    </>
+                    </div>
                   </FormControl>
                    {photoPreview && (
                     <div className="mt-2 relative w-full h-48">
