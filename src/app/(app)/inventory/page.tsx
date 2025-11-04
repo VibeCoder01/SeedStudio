@@ -1,12 +1,13 @@
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, ArrowUpDown, Search, X } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowUpDown, Search, X, Filter } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { INITIAL_SEEDS } from '@/lib/data';
 import type { Seed } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -26,6 +27,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Separator } from '@/components/ui/separator';
 import { SeedDialog } from '@/components/app/inventory/seed-dialog';
 import { SeedDetailDialog } from '@/components/app/inventory/seed-detail-dialog';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -44,6 +52,7 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'name', direction: 'ascending' });
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleAdd = useCallback(() => {
@@ -86,6 +95,14 @@ export default function InventoryPage() {
       return { key, direction };
     });
   }, []);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    seeds.forEach(seed => {
+      seed.tags?.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [seeds]);
   
   const sortedAndFilteredSeeds = useMemo(() => {
     let sortableItems = [...seeds];
@@ -102,11 +119,16 @@ export default function InventoryPage() {
         return 0;
       });
     }
-    return sortableItems.filter(seed => 
-        seed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        seed.source.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [seeds, searchTerm, sortConfig]);
+    return sortableItems.filter(seed => {
+        const matchesSearch = seed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          seed.source.toLowerCase().includes(searchTerm.toLowerCase());
+          
+        const matchesTags = selectedTags.length === 0 || 
+          selectedTags.every(tag => seed.tags?.includes(tag));
+          
+        return matchesSearch && matchesTags;
+    });
+  }, [seeds, searchTerm, sortConfig, selectedTags]);
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return null;
@@ -134,11 +156,17 @@ export default function InventoryPage() {
     });
     setSelectedSeeds([]);
   }, [selectedSeeds, setSeeds, toast]);
+
+  const toggleTagSelection = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
   
   // Clear selection if the filter/sort changes
   useEffect(() => {
     setSelectedSeeds([]);
-  }, [searchTerm, sortConfig]);
+  }, [searchTerm, sortConfig, selectedTags]);
 
   const isBatchMode = selectedSeeds.length > 0;
   const isAllSelected = sortedAndFilteredSeeds.length > 0 && selectedSeeds.length === sortedAndFilteredSeeds.length;
@@ -180,7 +208,41 @@ export default function InventoryPage() {
                         Select All
                     </label>
                 </div>
-                <span className="text-sm text-muted-foreground ml-4">Sort by:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Tags
+                      {selectedTags.length > 0 && <Badge variant="secondary" className="ml-2 rounded-sm">{selectedTags.length}</Badge>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Command>
+                      <CommandGroup>
+                        {allTags.map((tag) => (
+                          <CommandItem key={tag} onSelect={() => toggleTagSelection(tag)}>
+                            <Checkbox
+                              className="mr-2"
+                              checked={selectedTags.includes(tag)}
+                            />
+                            {tag}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      {selectedTags.length > 0 && (
+                        <>
+                          <Separator />
+                          <CommandGroup>
+                            <CommandItem onSelect={() => setSelectedTags([])} className="justify-center text-center">
+                              Clear filters
+                            </CommandItem>
+                          </CommandGroup>
+                        </>
+                      )}
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <span className="text-sm text-muted-foreground ml-2">Sort by:</span>
                 <Button variant="outline" size="sm" onClick={() => requestSort('name')}>
                   Name {getSortIndicator('name')}
                 </Button>
@@ -252,16 +314,23 @@ export default function InventoryPage() {
                           aria-label={`Select ${seed.name}`}
                         />
                     </div>
-                     <div className="p-6 pb-0">
+                     <div className="p-6 pb-2">
                       <CardTitle className="font-headline">{seed.name}</CardTitle>
                       <CardDescription>{seed.source}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <p>
+                <CardContent className="p-6 pt-2">
+                  <p className="mb-2">
                     In Stock: <span className="font-bold">{seed.stock}</span>
                   </p>
+                  {seed.tags && seed.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {seed.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2">
                   <Button variant="outline" size="icon" onClick={() => handleEdit(seed)} disabled={isBatchMode}>

@@ -16,6 +16,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -43,6 +44,7 @@ const formSchema = z.object({
   plantingDepth: z.string().optional(),
   daysToGermination: z.coerce.number().int().min(0).optional(),
   daysToHarvest: z.coerce.number().int().min(0).optional(),
+  tags: z.string().optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -67,6 +69,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       plantingDepth: '',
       daysToGermination: 0,
       daysToHarvest: 0,
+      tags: '',
     },
   });
 
@@ -76,6 +79,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         ...seed,
         daysToGermination: seed.daysToGermination ?? 0,
         daysToHarvest: seed.daysToHarvest ?? 0,
+        tags: seed.tags?.join(', ') || '',
       });
     } else {
       form.reset({
@@ -87,6 +91,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         plantingDepth: '',
         daysToGermination: 0,
         daysToHarvest: 0,
+        tags: '',
       });
     }
   }, [seed, form, isOpen]);
@@ -96,6 +101,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       id: seed?.id || crypto.randomUUID(),
       ...data,
       notes: data.notes || '',
+      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
     };
     onSave(newSeed);
     onOpenChange(false);
@@ -183,6 +189,22 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., heirloom, full-sun, organic" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Add comma-separated tags to help organize your seeds.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

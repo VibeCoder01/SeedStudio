@@ -9,6 +9,7 @@ export interface Seed {
   plantingDepth?: string;
   daysToGermination?: number;
   daysToHarvest?: number;
+  tags?: string[];
 }
 
 export interface TaskType {

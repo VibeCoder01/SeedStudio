@@ -17,6 +17,7 @@ import { ScheduleDialog } from '../schedule/schedule-dialog';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useTasks } from '@/hooks/use-tasks';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface SeedDetailDialogProps {
   isOpen: boolean;
@@ -78,6 +79,16 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
           <DialogDescription>From {seed.source}</DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4 max-h-[50vh] overflow-y-auto pr-4">
+            {seed.tags && seed.tags.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {seed.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-4">
                 <div>
                     <h4 className="font-semibold">Stock Level</h4>

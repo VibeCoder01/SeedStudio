@@ -21,6 +21,7 @@ export const INITIAL_SEEDS: Seed[] = [
     plantingDepth: '1/4 inch',
     daysToGermination: 7,
     daysToHarvest: 60,
+    tags: ['heirloom', 'full-sun'],
   },
   {
     id: 'carrot-seeds-1',
@@ -32,6 +33,7 @@ export const INITIAL_SEEDS: Seed[] = [
     plantingDepth: '1/2 inch',
     daysToGermination: 14,
     daysToHarvest: 70,
+    tags: ['root-vegetable', 'cool-weather'],
   },
   {
     id: 'lettuce-seeds-1',
@@ -43,6 +45,7 @@ export const INITIAL_SEEDS: Seed[] = [
     plantingDepth: '1/8 inch',
     daysToGermination: 8,
     daysToHarvest: 50,
+    tags: ['leafy-green', 'cool-weather'],
   },
     {
     id: 'basil-seeds-1',
@@ -54,5 +57,6 @@ export const INITIAL_SEEDS: Seed[] = [
     plantingDepth: '1/4 inch',
     daysToGermination: 10,
     daysToHarvest: 60,
+    tags: ['herb', 'full-sun', 'container-friendly'],
   }
 ];
