@@ -16,6 +16,7 @@ import { useState, useCallback } from 'react';
 import { ScheduleDialog } from '../schedule/schedule-dialog';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useTasks } from '@/hooks/use-tasks';
+import { useToast } from '@/hooks/use-toast';
 
 interface SeedDetailDialogProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
   const { allTasks } = useTasks();
+  const { toast } = useToast();
 
   const handleEditClick = useCallback(() => {
     if (!seed) return;
@@ -41,9 +43,12 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
   }, [onOpenChange]);
 
   const handleScheduleSave = useCallback((task: ScheduledTask) => {
-    const newScheduledTask = { ...task, id: crypto.randomUUID() };
-    setScheduledTasks(currentTasks => [...currentTasks, newScheduledTask]);
-  }, [setScheduledTasks]);
+    setScheduledTasks(currentTasks => [...currentTasks, task]);
+    toast({
+      title: 'Task Scheduled',
+      description: 'Your new task has been added to the schedule.',
+    });
+  }, [setScheduledTasks, toast]);
 
   if (!seed) {
     return null;
