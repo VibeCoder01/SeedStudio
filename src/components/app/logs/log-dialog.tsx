@@ -203,7 +203,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a seed" />
-                          </Trigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {seeds.map((seed) => (
