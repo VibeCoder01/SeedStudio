@@ -325,7 +325,9 @@ export default function InventoryPage() {
               const imageData = getImageData(seed.imageId);
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
-              const totalSeeds = (seed.packetCount || 0) * (seed.seedsPerPacket || 0);
+              const packetCount = Number(seed.packetCount) > 0 ? Number(seed.packetCount) : 0;
+              const seedsPerPacket = Number(seed.seedsPerPacket) > 0 ? Number(seed.seedsPerPacket) : 0;
+              const totalSeeds = packetCount * seedsPerPacket;
               const isLowStock = !seed.isWishlist && seed.packetCount < 10;
 
               return (
@@ -373,7 +375,7 @@ export default function InventoryPage() {
                             </p>
                             {seed.seedsPerPacket && (
                                 <p className="text-muted-foreground">
-                                    ~{(isNaN(totalSeeds) ? 0 : totalSeeds).toLocaleString()} seeds total
+                                    ~{totalSeeds.toLocaleString()} seeds total
                                 </p>
                             )}
                         </div>
