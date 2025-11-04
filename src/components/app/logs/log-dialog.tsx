@@ -78,8 +78,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       notes: '',
       photoId: undefined,
       seedId: '',
-      quantity: undefined,
-      weight: undefined,
+      quantity: '',
+      weight: '',
     }
   });
 
@@ -94,8 +94,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
         notes: log?.notes || '',
         photoId: log?.photoId || undefined,
         seedId: log?.seedId || '',
-        quantity: log?.quantity ?? undefined,
-        weight: log?.weight ?? undefined,
+        quantity: log?.quantity ?? '',
+        weight: log?.weight ?? '',
       });
 
       if (log?.photoId) {
@@ -241,7 +241,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   <FormItem>
                     <FormLabel>Quantity Planted</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} value={field.value ?? ''} />
+                      <Input type="number" min="0" placeholder="0" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -258,7 +258,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
+                        <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -271,7 +271,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     <FormItem>
                       <FormLabel>Weight (lbs)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} value={field.value ?? ''} />
+                        <Input type="number" min="0" step="0.1" placeholder="e.g., 2.5" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

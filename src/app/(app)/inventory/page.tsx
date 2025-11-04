@@ -58,6 +58,26 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
 
+  // One-time effect to sanitize negative inventory values
+  useEffect(() => {
+    const hasNegativeStock = seeds.some(seed => seed.packetCount < 0);
+    if (hasNegativeStock) {
+        setSeeds(currentSeeds =>
+            currentSeeds.map(seed =>
+                seed.packetCount < 0 ? { ...seed, packetCount: 0 } : seed
+            )
+        );
+         toast({
+            title: "Inventory Corrected",
+            description: "Any items with negative stock have been set to 0.",
+        });
+    }
+    // We only want this to run once on mount if data changes from an external source, 
+    // but not on every local change. The stringified seeds is a compromise.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(seeds), setSeeds, toast]);
+
+
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
     setDialogOpen(true);
@@ -312,7 +332,7 @@ export default function InventoryPage() {
               return (
                 <Card key={seed.id} className={cn(
                     isSelected && 'ring-2 ring-primary',
-                    isLowStock && 'border-2 border-yellow-500'
+                    isLowStock && 'border-4 border-yellow-500'
                 )}>
                   <CardHeader className="p-0">
                     <div className="relative">
@@ -422,5 +442,3 @@ export default function InventoryPage() {
     </>
   );
 }
-
-    
