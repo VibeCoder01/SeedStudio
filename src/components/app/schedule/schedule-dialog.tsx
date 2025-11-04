@@ -80,6 +80,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
       notes: data.notes || '',
       startDate: data.startDate ? data.startDate.toISOString() : undefined,
     };
+    
     onSave(newScheduledTask);
     onOpenChange(false);
     toast({
