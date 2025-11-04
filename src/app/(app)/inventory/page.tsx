@@ -42,7 +42,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type SortKey = keyof Seed | 'packetCount';
+type SortKey = 'name' | 'packetCount';
 
 export default function InventoryPage() {
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);

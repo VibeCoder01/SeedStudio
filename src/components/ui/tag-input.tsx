@@ -5,9 +5,8 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Input, type InputProps } from "@/components/ui/input"
 
-interface TagInputProps extends Omit<InputProps, "onChange"> {
+interface TagInputProps extends Omit<React.ComponentPropsWithoutRef<"input">, "onChange"> {
   tags: string[]
   onChange: (tags: string[]) => void
 }
@@ -32,13 +31,13 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
     }
 
     const removeTag = (tagToRemove: string) => {
-      onChange(tags.filter(tag => tag !== tagToRemove))
+      onChange(tags.filter((tag: string) => tag !== tagToRemove))
     }
 
     return (
       <div>
         <div className="flex flex-wrap gap-2 rounded-md border border-input p-2">
-          {tags.map((tag, index) => (
+          {tags.map((tag: string, index: number) => (
             <Badge key={index} variant="secondary">
               {tag}
               <button

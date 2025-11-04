@@ -69,14 +69,14 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       name: '',
       source: '',
       packetCount: 0,
-      seedsPerPacket: '',
+      seedsPerPacket: undefined,
       imageId: '',
       notes: '',
       plantingDepth: '',
-      daysToGermination: '',
-      daysToHarvest: '',
+      daysToGermination: undefined,
+      daysToHarvest: undefined,
       tags: [],
-      purchaseYear: '',
+      purchaseYear: new Date().getFullYear(),
       isWishlist: false,
     },
   });
@@ -85,10 +85,10 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     if (seed) {
       form.reset({
         ...seed,
-        seedsPerPacket: seed.seedsPerPacket ?? '',
-        daysToGermination: seed.daysToGermination ?? '',
-        daysToHarvest: seed.daysToHarvest ?? '',
-        purchaseYear: seed.purchaseYear ?? '',
+        seedsPerPacket: seed.seedsPerPacket ?? undefined,
+        daysToGermination: seed.daysToGermination ?? undefined,
+        daysToHarvest: seed.daysToHarvest ?? undefined,
+        purchaseYear: seed.purchaseYear ?? new Date().getFullYear(),
         tags: seed.tags || [],
         notes: seed.notes || '',
         plantingDepth: seed.plantingDepth || '',
@@ -99,14 +99,14 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         name: '',
         source: '',
         packetCount: 0,
-        seedsPerPacket: '',
+        seedsPerPacket: undefined,
         imageId: '',
         notes: '',
         plantingDepth: '',
-        daysToGermination: '',
-        daysToHarvest: '',
+        daysToGermination: undefined,
+        daysToHarvest: undefined,
         tags: [],
-        purchaseYear: new Date().getFullYear().toString(),
+        purchaseYear: new Date().getFullYear(),
         isWishlist: false,
       });
     }
@@ -212,7 +212,15 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormItem>
                       <FormLabel>Packets in Stock</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          value={typeof field.value === 'number' ? field.value : ''}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' ? 0 : Number(value));
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,7 +233,16 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormItem>
                       <FormLabel>Seeds Per Packet</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 50" {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="e.g., 50"
+                          value={field.value ?? ''}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' ? undefined : Number(value));
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -264,13 +281,13 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                   <FormItem>
                     <FormLabel>Tags</FormLabel>
                     <FormControl>
-                      <TagInput
-                        placeholder="Enter a tag"
-                        tags={field.value || []}
-                        onChange={(tags) => {
-                          field.onChange(tags);
-                        }}
-                      />
+                        <TagInput
+                          placeholder="Enter a tag"
+                          tags={field.value || []}
+                          onChange={(tags: string[]) => {
+                            field.onChange(tags);
+                          }}
+                        />
                     </FormControl>
                      <FormDescription>
                       Add tags to help organize your seeds.
@@ -300,7 +317,15 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                       <FormItem>
                         <FormLabel>Purchase Year</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 2024" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="e.g., 2024"
+                            value={field.value ?? ''}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              field.onChange(value === '' ? undefined : Number(value));
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -315,7 +340,15 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                   <FormItem>
                     <FormLabel>Days to Germination</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 7" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="e.g., 7"
+                        value={field.value ?? ''}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          field.onChange(value === '' ? undefined : Number(value));
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -328,7 +361,15 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                   <FormItem>
                     <FormLabel>Days to Harvest</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 60" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="e.g., 60"
+                        value={field.value ?? ''}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          field.onChange(value === '' ? undefined : Number(value));
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
