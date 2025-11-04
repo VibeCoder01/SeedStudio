@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Edit, CalendarPlus } from 'lucide-react';
+import { Edit, CalendarPlus, History } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { ScheduleDialog } from '../schedule/schedule-dialog';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -61,6 +61,9 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
     notes: `Task for ${seed.name}`,
   };
 
+  const currentYear = new Date().getFullYear();
+  const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
+
   return (
     <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -74,6 +77,12 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
               className="rounded-lg object-cover"
               data-ai-hint={imageData.imageHint}
             />
+             {isOldSeed && (
+              <Badge variant="destructive" className="absolute top-2 left-2 flex items-center gap-1">
+                <History className="h-3 w-3" />
+                Old Seed
+              </Badge>
+            )}
           </div>
           <DialogTitle className="text-2xl font-headline">{seed.name}</DialogTitle>
           <DialogDescription>From {seed.source}</DialogDescription>
@@ -89,10 +98,14 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <h4 className="font-semibold">Stock Level</h4>
-                    <p>{seed.stock}</p>
+                    <h4 className="font-semibold">Packets in Stock</h4>
+                    <p>{seed.isWishlist ? 'Wishlist Item' : seed.stock}</p>
+                </div>
+                 <div>
+                    <h4 className="font-semibold">Purchase Year</h4>
+                    <p>{seed.purchaseYear || 'N/A'}</p>
                 </div>
             </div>
              <div className="grid grid-cols-3 gap-4">
@@ -115,9 +128,11 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
             </div>
         </div>
         <DialogFooter className="justify-between">
-            <Button variant="outline" onClick={handleScheduleClick}>
-                <CalendarPlus className="mr-2 h-4 w-4" /> Schedule Task
-            </Button>
+            {!seed.isWishlist && (
+              <Button variant="outline" onClick={handleScheduleClick}>
+                  <CalendarPlus className="mr-2 h-4 w-4" /> Schedule Task
+              </Button>
+            )}
             <Button variant="default" onClick={handleEditClick}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
             </Button>

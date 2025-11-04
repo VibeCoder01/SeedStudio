@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, ArrowUpDown, Search, X, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Filter, History } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { INITIAL_SEEDS } from '@/lib/data';
 import type { Seed } from '@/lib/types';
@@ -40,6 +40,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type SortKey = keyof Seed | 'stock';
 
@@ -53,6 +54,7 @@ export default function InventoryPage() {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'name', direction: 'ascending' });
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
 
   const handleAdd = useCallback(() => {
@@ -105,7 +107,9 @@ export default function InventoryPage() {
   }, [seeds]);
   
   const sortedAndFilteredSeeds = useMemo(() => {
-    let sortableItems = [...seeds];
+    const isWishlist = activeTab === 'wishlist';
+    let sortableItems = seeds.filter(seed => (seed.isWishlist || false) === isWishlist);
+
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         const valA = a[sortConfig.key];
@@ -128,7 +132,7 @@ export default function InventoryPage() {
           
         return matchesSearch && matchesTags;
     });
-  }, [seeds, searchTerm, sortConfig, selectedTags]);
+  }, [seeds, searchTerm, sortConfig, selectedTags, activeTab]);
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return null;
@@ -152,7 +156,7 @@ export default function InventoryPage() {
   const handleDeleteSelected = useCallback(() => {
     setSeeds(currentSeeds => currentSeeds.filter(seed => !selectedSeeds.includes(seed.id)));
     toast({
-      title: `${selectedSeeds.length} seed(s) deleted`,
+      title: `${selectedSeeds.length} item(s) deleted`,
     });
     setSelectedSeeds([]);
   }, [selectedSeeds, setSeeds, toast]);
@@ -163,13 +167,14 @@ export default function InventoryPage() {
     );
   };
   
-  // Clear selection if the filter/sort changes
+  // Clear selection if the filter/sort/tab changes
   useEffect(() => {
     setSelectedSeeds([]);
-  }, [searchTerm, sortConfig, selectedTags]);
+  }, [searchTerm, sortConfig, selectedTags, activeTab]);
 
   const isBatchMode = selectedSeeds.length > 0;
   const isAllSelected = sortedAndFilteredSeeds.length > 0 && selectedSeeds.length === sortedAndFilteredSeeds.length;
+  const currentYear = new Date().getFullYear();
 
   return (
     <>
@@ -177,203 +182,220 @@ export default function InventoryPage() {
         {!isBatchMode && (
           <Button onClick={handleAdd}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Seed
+            Add Item
           </Button>
         )}
       </PageHeader>
       
-       <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="relative lg:col-span-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search seeds by name or source..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex items-center justify-start sm:justify-end gap-2 lg:col-span-2">
-                 <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="selectAll"
-                        checked={sortedAndFilteredSeeds.length > 0 && isAllSelected}
-                        onCheckedChange={handleSelectAll}
-                    />
-                    <label
-                        htmlFor="selectAll"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                        Select All
-                    </label>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="stock">In Stock</TabsTrigger>
+          <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
+        </TabsList>
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="relative lg:col-span-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or source..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="mr-2 h-4 w-4" />
-                      Tags
-                      {selectedTags.length > 0 && <Badge variant="secondary" className="ml-2 rounded-sm">{selectedTags.length}</Badge>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <Command>
-                      <CommandGroup>
-                        {allTags.map((tag) => (
-                          <CommandItem key={tag} onSelect={() => toggleTagSelection(tag)}>
-                            <Checkbox
-                              className="mr-2"
-                              checked={selectedTags.includes(tag)}
-                            />
-                            {tag}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                      {selectedTags.length > 0 && (
-                        <>
-                          <Separator />
-                          <CommandGroup>
-                            <CommandItem onSelect={() => setSelectedTags([])} className="justify-center text-center">
-                              Clear filters
+                <div className="flex items-center justify-start sm:justify-end gap-2 lg:col-span-2">
+                   <div className="flex items-center space-x-2">
+                      <Checkbox
+                          id="selectAll"
+                          checked={sortedAndFilteredSeeds.length > 0 && isAllSelected}
+                          onCheckedChange={handleSelectAll}
+                      />
+                      <label
+                          htmlFor="selectAll"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                          Select All
+                      </label>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Tags
+                        {selectedTags.length > 0 && <Badge variant="secondary" className="ml-2 rounded-sm">{selectedTags.length}</Badge>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Command>
+                        <CommandGroup>
+                          {allTags.map((tag) => (
+                            <CommandItem key={tag} onSelect={() => toggleTagSelection(tag)}>
+                              <Checkbox
+                                className="mr-2"
+                                checked={selectedTags.includes(tag)}
+                              />
+                              {tag}
                             </CommandItem>
-                          </CommandGroup>
-                        </>
-                      )}
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <span className="text-sm text-muted-foreground ml-2">Sort by:</span>
-                <Button variant="outline" size="sm" onClick={() => requestSort('name')}>
-                  Name {getSortIndicator('name')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => requestSort('stock')}>
-                  Stock {getSortIndicator('stock')}
-                </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {isBatchMode && (
-         <Card className="mb-6 sticky top-2 z-10 bg-card/95 backdrop-blur-sm">
-          <CardContent className="p-4 flex items-center justify-between">
-            <p className="text-sm font-medium">{selectedSeeds.length} selected</p>
-            <div className="flex gap-2">
-               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
+                          ))}
+                        </CommandGroup>
+                        {selectedTags.length > 0 && (
+                          <>
+                            <Separator />
+                            <CommandGroup>
+                              <CommandItem onSelect={() => setSelectedTags([])} className="justify-center text-center">
+                                Clear filters
+                              </CommandItem>
+                            </CommandGroup>
+                          </>
+                        )}
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-sm text-muted-foreground ml-2">Sort by:</span>
+                  <Button variant="outline" size="sm" onClick={() => requestSort('name')}>
+                    Name {getSortIndicator('name')}
+                  </Button>
+                  {activeTab === 'stock' && (
+                    <Button variant="outline" size="sm" onClick={() => requestSort('stock')}>
+                      Stock {getSortIndicator('stock')}
                     </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will permanently delete {selectedSeeds.length} seed(s) from your inventory. This action cannot be undone.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteSelected}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-                </AlertDialog>
-                <Button variant="outline" onClick={() => setSelectedSeeds([])}>
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                </Button>
+                  )}
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {sortedAndFilteredSeeds.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {sortedAndFilteredSeeds.map((seed) => {
-            const imageData = getImageData(seed.imageId);
-            const isSelected = selectedSeeds.includes(seed.id);
-            return (
-              <Card key={seed.id} className={isSelected ? 'ring-2 ring-primary' : ''}>
-                <CardHeader className="p-0">
-                  <div className="relative">
-                    <button className="text-left w-full" onClick={() => handleViewDetails(seed)}>
-                      <div className="relative h-48 w-full">
-                        <Image
-                          src={imageData.imageUrl}
-                          alt={seed.name}
-                          fill
-                          className="rounded-t-lg object-cover"
-                          data-ai-hint={imageData.imageHint}
-                        />
-                      </div>
-                    </button>
-                    <div className="absolute top-2 right-2">
-                       <Checkbox
-                          className="h-6 w-6 bg-background/80 hover:bg-background border-border shadow-md data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSeedSelection(seed.id)}
-                          aria-label={`Select ${seed.name}`}
-                        />
-                    </div>
-                     <div className="p-6 pb-2">
-                      <CardTitle className="font-headline">{seed.name}</CardTitle>
-                      <CardDescription>{seed.source}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-2">
-                  <p className="mb-2">
-                    In Stock: <span className="font-bold">{seed.stock}</span>
-                  </p>
-                  {seed.tags && seed.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {seed.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="flex justify-end gap-2">
-                  <Button variant="outline" size="icon" onClick={() => handleEdit(seed)} disabled={isBatchMode}>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon" disabled={isBatchMode}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
+      
+        {isBatchMode && (
+           <Card className="mb-6 sticky top-2 z-10 bg-card/95 backdrop-blur-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <p className="text-sm font-medium">{selectedSeeds.length} selected</p>
+              <div className="flex gap-2">
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button variant="destructive">
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete this seed from your
-                          inventory.
-                        </AlertDialogDescription>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This will permanently delete {selectedSeeds.length} item(s). This action cannot be undone.
+                      </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(seed.id)}>Delete</AlertDialogAction>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteSelected}>Delete</AlertDialogAction>
                       </AlertDialogFooter>
-                    </AlertDialogContent>
+                  </AlertDialogContent>
                   </AlertDialog>
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-center h-80">
-          <h3 className="text-2xl font-bold tracking-tight">No seeds found</h3>
-          <p className="text-muted-foreground">
-            {searchTerm ? `No seeds match your search for "${searchTerm}".` : "Get started by adding a seed."}
-          </p>
-          <Button className="mt-4" onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" /> Add Seed
-          </Button>
-        </div>
-      )}
+                  <Button variant="outline" onClick={() => setSelectedSeeds([])}>
+                      <X className="mr-2 h-4 w-4" /> Cancel
+                  </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <TabsContent value={activeTab}>
+        {sortedAndFilteredSeeds.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {sortedAndFilteredSeeds.map((seed) => {
+              const imageData = getImageData(seed.imageId);
+              const isSelected = selectedSeeds.includes(seed.id);
+              const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
+              return (
+                <Card key={seed.id} className={isSelected ? 'ring-2 ring-primary' : ''}>
+                  <CardHeader className="p-0">
+                    <div className="relative">
+                      <button className="text-left w-full" onClick={() => handleViewDetails(seed)}>
+                        <div className="relative h-48 w-full">
+                          <Image
+                            src={imageData.imageUrl}
+                            alt={seed.name}
+                            fill
+                            className="rounded-t-lg object-cover"
+                            data-ai-hint={imageData.imageHint}
+                          />
+                        </div>
+                         {isOldSeed && (
+                            <Badge variant="destructive" className="absolute top-2 left-2 flex items-center gap-1">
+                                <History className="h-3 w-3" /> Old Seed
+                            </Badge>
+                         )}
+                      </button>
+                      <div className="absolute top-2 right-2">
+                         <Checkbox
+                            className="h-6 w-6 bg-background/80 hover:bg-background border-border shadow-md data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSeedSelection(seed.id)}
+                            aria-label={`Select ${seed.name}`}
+                          />
+                      </div>
+                       <div className="p-6 pb-2">
+                        <CardTitle className="font-headline">{seed.name}</CardTitle>
+                        <CardDescription>{seed.source}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-2">
+                    {!seed.isWishlist && (
+                        <p className="mb-2">
+                            Packets in Stock: <span className="font-bold">{seed.stock}</span>
+                        </p>
+                    )}
+                    {seed.tags && seed.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {seed.tags.map(tag => (
+                          <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
+                    <Button variant="outline" size="icon" onClick={() => handleEdit(seed)} disabled={isBatchMode}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" disabled={isBatchMode}>
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this item.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(seed.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardFooter>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-center h-80">
+            <h3 className="text-2xl font-bold tracking-tight">No items found</h3>
+            <p className="text-muted-foreground">
+              {searchTerm ? `No items match your search for "${searchTerm}".` : `Get started by adding an item to your ${activeTab}.`}
+            </p>
+            <Button className="mt-4" onClick={handleAdd}>
+              <Plus className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+          </div>
+        )}
+        </TabsContent>
+      </Tabs>
 
       <SeedDialog isOpen={dialogOpen} onOpenChange={setDialogOpen} onSave={handleSave} seed={editingSeed} />
       

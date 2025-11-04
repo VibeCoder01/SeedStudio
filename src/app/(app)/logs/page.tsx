@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { INITIAL_SEEDS } from '@/lib/data';
 import type { LogEntry, Seed } from '@/lib/types';
@@ -188,7 +188,7 @@ export default function LogsPage() {
                     Date <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                <TableHead>Notes</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead>Photo</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -207,7 +207,16 @@ export default function LogsPage() {
                         </div>
                       </TableCell>
                       <TableCell>{format(new Date(log.date), 'PPP')}</TableCell>
-                      <TableCell className="max-w-xs truncate">{log.notes || '–'}</TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="flex flex-col gap-1">
+                          <span className="truncate">{log.notes || '–'}</span>
+                          {log.taskId === 'harvesting' && log.weight && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Scale className="h-3 w-3" /> {log.weight} lbs
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {log.photoId ? (
                           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleViewPhoto(log.photoId!)}>

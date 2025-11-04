@@ -10,6 +10,8 @@ export interface Seed {
   daysToGermination?: number;
   daysToHarvest?: number;
   tags?: string[];
+  purchaseYear?: number;
+  isWishlist?: boolean;
 }
 
 export interface TaskType {
@@ -26,6 +28,7 @@ export interface LogEntry {
   photoId?: string; // ID referencing an image in IndexedDB
   seedId?: string;
   quantity?: number;
+  weight?: number;
 }
 
 export type Recurrence = 'daily' | 'weekly' | 'bi-weekly' | 'monthly';
@@ -38,4 +41,12 @@ export interface ScheduledTask {
   recurrence: Recurrence;
   notes: string;
   startDate?: string; // ISO string
+}
+
+export interface JournalEntry {
+  id: string;
+  title: string;
+  date: string; // ISO string
+  content: string;
+  photoIds?: string[];
 }

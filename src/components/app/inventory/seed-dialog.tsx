@@ -33,6 +33,7 @@ import {
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 
 const formSchema = z.object({
@@ -45,6 +46,8 @@ const formSchema = z.object({
   daysToGermination: z.coerce.number().int().min(0).optional(),
   daysToHarvest: z.coerce.number().int().min(0).optional(),
   tags: z.string().optional(),
+  purchaseYear: z.coerce.number().optional(),
+  isWishlist: z.boolean().default(false),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -70,6 +73,8 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       daysToGermination: 0,
       daysToHarvest: 0,
       tags: '',
+      purchaseYear: new Date().getFullYear(),
+      isWishlist: false,
     },
   });
 
@@ -77,9 +82,11 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     if (seed) {
       form.reset({
         ...seed,
-        daysToGermination: seed.daysToGermination ?? 0,
-        daysToHarvest: seed.daysToHarvest ?? 0,
+        daysToGermination: seed.daysToGermination ?? undefined,
+        daysToHarvest: seed.daysToHarvest ?? undefined,
+        purchaseYear: seed.purchaseYear ?? new Date().getFullYear(),
         tags: seed.tags?.join(', ') || '',
+        isWishlist: seed.isWishlist ?? false,
       });
     } else {
       form.reset({
@@ -89,9 +96,11 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         imageId: '',
         notes: '',
         plantingDepth: '',
-        daysToGermination: 0,
-        daysToHarvest: 0,
+        daysToGermination: undefined,
+        daysToHarvest: undefined,
         tags: '',
+        purchaseYear: new Date().getFullYear(),
+        isWishlist: false,
       });
     }
   }, [seed, form, isOpen]);
@@ -111,13 +120,15 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       description: `${data.name} has been saved successfully.`,
     });
     
-    if (seed && seed.stock >= 10 && newSeed.stock < 10) {
+    if (seed && !seed.isWishlist && seed.stock >= 10 && newSeed.stock < 10) {
        toast({
         title: 'Low Stock Alert',
         description: `${newSeed.name} is running low.`,
       });
     }
   };
+  
+  const isWishlist = form.watch('isWishlist');
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -125,11 +136,31 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         <DialogHeader>
           <DialogTitle>{seed ? 'Edit Seed' : 'Add New Seed'}</DialogTitle>
           <DialogDescription>
-            {seed ? 'Update the details for this seed.' : 'Add a new seed to your inventory.'}
+            {seed ? 'Update the details for this seed.' : 'Add a new seed to your inventory or wishlist.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+            <FormField
+              control={form.control}
+              name="isWishlist"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Add to Wishlist</FormLabel>
+                    <FormDescription>
+                      Is this a seed you want to buy, not one you own?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="name"
@@ -150,25 +181,27 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 <FormItem>
                   <FormLabel>Source</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Garden Center" {...field} />
+                    <Input placeholder="e.g., Garden Center, Online" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="stock"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stock Level</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isWishlist && (
+              <FormField
+                control={form.control}
+                name="stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Packets in Stock</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="imageId"
@@ -209,26 +242,41 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="plantingDepth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Planting Depth</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 1/4 inch" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="plantingDepth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Planting Depth</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 1/4 inch" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="purchaseYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Purchase Year</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="e.g., 2024" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="daysToGermination"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Germination</FormLabel>
+                    <FormLabel>Days to Germination</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g., 7" {...field} />
                     </FormControl>
@@ -241,7 +289,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 name="daysToHarvest"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Harvest</FormLabel>
+                    <FormLabel>Days to Harvest</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g., 60" {...field} />
                     </FormControl>

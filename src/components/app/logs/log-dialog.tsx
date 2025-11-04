@@ -51,6 +51,7 @@ const formSchema = z.object({
   photoId: z.string().optional(),
   seedId: z.string().optional(),
   quantity: z.coerce.number().optional(),
+  weight: z.coerce.number().optional(),
 });
 
 type LogFormValues = z.infer<typeof formSchema>;
@@ -82,9 +83,10 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
         taskId: log?.taskId || '',
         date: log?.date ? new Date(log.date) : new Date(),
         notes: log?.notes || '',
-        photoId: log?.photoId || '',
+        photoId: log?.photoId || undefined,
         seedId: log?.seedId || '',
-        quantity: log?.quantity || 0,
+        quantity: log?.quantity || undefined,
+        weight: log?.weight || undefined,
       });
 
       if (log?.photoId) {
@@ -147,6 +149,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       photoId: data.photoId,
       seedId: data.seedId,
       quantity: data.quantity,
+      weight: data.weight,
     };
     onSave(newLog);
     onOpenChange(false);
@@ -155,6 +158,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       description: 'Your garden log has been updated.',
     });
   };
+  
+  const availableSeeds = seeds?.filter(s => !s.isWishlist);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -191,32 +196,52 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                 </FormItem>
               )}
             />
-            {taskId === 'planting' && seeds && (
+
+            {(taskId === 'planting' || taskId === 'harvesting') && availableSeeds && (
+              <FormField
+                control={form.control}
+                name="seedId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seed</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a seed" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableSeeds.map((seed) => (
+                          <SelectItem key={seed.id} value={seed.id}>
+                            {seed.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {taskId === 'planting' && (
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity Planted</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {taskId === 'harvesting' && (
               <div className="grid grid-cols-2 gap-4">
-                 <FormField
-                  control={form.control}
-                  name="seedId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seed</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a seed" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {seeds.map((seed) => (
-                            <SelectItem key={seed.id} value={seed.id}>
-                              {seed.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="quantity"
@@ -224,7 +249,20 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
+                        <Input type="number" placeholder="e.g., 10" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Weight (lbs)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -232,6 +270,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                 />
               </div>
             )}
+
             <FormField
               control={form.control}
               name="date"

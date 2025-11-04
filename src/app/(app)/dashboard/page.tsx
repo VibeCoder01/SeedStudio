@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { ActivityChart } from '@/components/app/dashboard/activity-chart';
+import { HarvestChart } from '@/components/app/dashboard/harvest-chart';
 import { useTasks } from '@/hooks/use-tasks';
 
 export default function DashboardPage() {
@@ -24,7 +25,7 @@ export default function DashboardPage() {
   const [logs] = useLocalStorage<LogEntry[]>('logs', []);
   const { allTasks } = useTasks();
 
-  const lowStockSeeds = useMemo(() => seeds.filter((seed) => seed.stock < 10), [seeds]);
+  const lowStockSeeds = useMemo(() => seeds.filter((seed) => !seed.isWishlist && seed.stock < 10), [seeds]);
   
   const nextTask = useMemo(() => {
     // Simple sort, can be improved with date-fns if more complex logic is needed
@@ -51,7 +52,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle>Seed Inventory</CardTitle>
                 <CardDescription>
-                  {seeds.length} types of seeds in stock.
+                  {seeds.filter(s => !s.isWishlist).length} types of seeds in stock.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -105,6 +106,16 @@ export default function DashboardPage() {
                 </Button>
               </CardFooter>
             </Card>
+          </CardContent>
+        </Card>
+        
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle className="font-headline">Recent Harvest</CardTitle>
+            <CardDescription>A summary of your harvest yields over the last 30 days.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HarvestChart logs={logs} seeds={seeds} />
           </CardContent>
         </Card>
 

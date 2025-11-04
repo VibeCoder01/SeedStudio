@@ -37,7 +37,6 @@ const formSchema = z.object({
   taskId: z.string().min(1, 'Please select an activity.'),
   recurrence: z.enum(recurrences, { required_error: 'Please select a recurrence.' }),
   notes: z.string().optional(),
-  startDate: z.date().optional(),
 });
 
 type ScheduleFormValues = z.infer<typeof formSchema>;
@@ -62,7 +61,6 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
         taskId: scheduledTask?.taskId || '',
         recurrence: scheduledTask?.recurrence || 'weekly',
         notes: scheduledTask?.notes || '',
-        startDate: scheduledTask?.startDate ? new Date(scheduledTask.startDate) : undefined,
       });
     }
   }, [scheduledTask, form, isOpen]);
@@ -73,7 +71,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
       taskId: data.taskId,
       recurrence: data.recurrence,
       notes: data.notes || '',
-      startDate: data.startDate?.toISOString(),
+      startDate: scheduledTask?.startDate,
     };
     
     onSave(newScheduledTask);
