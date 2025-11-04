@@ -101,7 +101,8 @@ export default function LogsPage() {
     if (log.taskId === 'planting' && log.seedId && log.quantity) {
       const plantedSeed = getSeedById(log.seedId);
       if (plantedSeed) {
-        const newPacketCount = plantedSeed.packetCount - log.quantity;
+        // Prevent negative stock
+        const newPacketCount = Math.max(0, plantedSeed.packetCount - log.quantity);
         setSeeds(currentSeeds => currentSeeds.map(s => s.id === log.seedId ? {...s, packetCount: newPacketCount} : s));
         
         if (newPacketCount < 10 && plantedSeed.packetCount >= 10) {
@@ -289,3 +290,5 @@ export default function LogsPage() {
     </>
   );
 }
+
+    

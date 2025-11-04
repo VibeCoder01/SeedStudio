@@ -312,7 +312,7 @@ export default function InventoryPage() {
               return (
                 <Card key={seed.id} className={cn(
                     isSelected && 'ring-2 ring-primary',
-                    isLowStock && 'border-yellow-500'
+                    isLowStock && 'border-2 border-yellow-500'
                 )}>
                   <CardHeader className="p-0">
                     <div className="relative">
@@ -422,3 +422,5 @@ export default function InventoryPage() {
     </>
   );
 }
+
+    
