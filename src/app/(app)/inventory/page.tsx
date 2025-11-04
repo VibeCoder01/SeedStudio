@@ -57,50 +57,42 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
 
-  const ensureSeedArray = useCallback(
-    (value: unknown): Seed[] => {
-      if (!Array.isArray(value)) {
-        return [];
-      }
-
-      return value.filter((seed): seed is Seed => {
-        if (!seed || typeof seed !== 'object') {
-          return false;
-        }
-
-        const candidate = seed as Partial<Seed>;
-        return typeof candidate.id === 'string' && typeof candidate.name === 'string';
-      });
-    },
-    []
-  );
-
-  const normalizedSeeds = useMemo(() => ensureSeedArray(seeds), [seeds, ensureSeedArray]);
-
-  useEffect(() => {
-    const rawSeeds = seeds as unknown;
-
-    if (!Array.isArray(rawSeeds)) {
-      setSeeds([...INITIAL_SEEDS]);
+  const normalizedSeeds = useMemo(() => {
+    if (!Array.isArray(seeds)) {
       toast({
         title: 'Inventory Reset',
         description: 'Stored inventory data was invalid and has been reset.',
       });
-      return;
+      return INITIAL_SEEDS;
     }
 
-    const cleanedSeeds = ensureSeedArray(rawSeeds).map(seed => 
-        Number(seed.packetCount) < 0 ? { ...seed, packetCount: 0 } : seed
-    );
+    const cleaned = seeds.map(seed => {
+      if (!seed || typeof seed.id !== 'string' || typeof seed.name !== 'string') {
+        return null;
+      }
+      return {
+        ...seed,
+        packetCount: Number(seed.packetCount) < 0 ? 0 : (seed.packetCount || 0)
+      };
+    }).filter((seed): seed is Seed => seed !== null);
 
-    if (cleanedSeeds.length !== rawSeeds.length || JSON.stringify(cleanedSeeds) !== JSON.stringify(rawSeeds)) {
-        setSeeds(cleanedSeeds);
-        toast({
+    if (cleaned.length !== seeds.length) {
+       toast({
             title: 'Inventory Corrected',
-            description: 'Invalid or negative stock items have been corrected.',
+            description: 'Some invalid inventory items were removed or corrected.',
         });
     }
-  }, [seeds, setSeeds, toast, ensureSeedArray]);
+
+    return cleaned;
+  }, [seeds, toast]);
+
+  useEffect(() => {
+    // This effect ensures that if the memoized value differs from the localStorage value,
+    // we update localStorage to match the cleaned version. This should only run once if data is dirty.
+    if (JSON.stringify(normalizedSeeds) !== JSON.stringify(seeds)) {
+      setSeeds(normalizedSeeds);
+    }
+  }, [normalizedSeeds, seeds, setSeeds]);
 
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
@@ -119,19 +111,19 @@ export default function InventoryPage() {
 
   const handleDelete = useCallback((id: string) => {
     setSeeds(currentSeeds =>
-      ensureSeedArray(currentSeeds).filter(seed => seed.id !== id)
+      (currentSeeds || []).filter(seed => seed.id !== id)
     );
-  }, [setSeeds, ensureSeedArray]);
+  }, [setSeeds]);
 
   const handleSave = useCallback((seed: Seed) => {
     setSeeds(currentSeeds => {
-      const seedsArray = ensureSeedArray(currentSeeds);
+      const seedsArray = Array.isArray(currentSeeds) ? currentSeeds : [];
       if (editingSeed) {
         return seedsArray.map((s) => (s.id === seed.id ? seed : s));
       }
       return [...seedsArray, seed];
     });
-  }, [editingSeed, setSeeds, ensureSeedArray]);
+  }, [editingSeed, setSeeds]);
 
   const getImageData = (imageId: string) => {
     return PlaceHolderImages.find((img) => img.id === imageId) || PlaceHolderImages[0];
@@ -206,13 +198,13 @@ export default function InventoryPage() {
 
   const handleDeleteSelected = useCallback(() => {
     setSeeds(currentSeeds =>
-      ensureSeedArray(currentSeeds).filter(seed => !selectedSeeds.includes(seed.id))
+      (currentSeeds || []).filter(seed => !selectedSeeds.includes(seed.id))
     );
     toast({
       title: `${selectedSeeds.length} item(s) deleted`,
     });
     setSelectedSeeds([]);
-  }, [selectedSeeds, setSeeds, toast, ensureSeedArray]);
+  }, [selectedSeeds, setSeeds, toast]);
 
   const toggleTagSelection = (tag: string) => {
     setSelectedTags(prev => 
@@ -358,10 +350,12 @@ export default function InventoryPage() {
               const imageData = getImageData(seed.imageId);
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
+              
               const packetCount = Number(seed.packetCount) > 0 ? Number(seed.packetCount) : 0;
               const seedsPerPacket = Number(seed.seedsPerPacket) > 0 ? Number(seed.seedsPerPacket) : 0;
               const totalSeeds = packetCount * seedsPerPacket;
-              const isLowStock = !seed.isWishlist && seed.packetCount < 10;
+              
+              const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < 10;
 
               return (
                 <Card key={seed.id} className={cn(
@@ -404,13 +398,13 @@ export default function InventoryPage() {
                     {!seed.isWishlist && (
                         <div className="text-sm">
                             <p>
-                                Packets: <span className="font-bold">{seed.packetCount}</span>
+                                Packets: <span className="font-bold">{packetCount}</span>
                             </p>
-                            {seed.seedsPerPacket && (
+                            {seed.seedsPerPacket ? (
                                 <p className="text-muted-foreground">
                                     ~{totalSeeds.toLocaleString()} seeds total
                                 </p>
-                            )}
+                            ) : null}
                         </div>
                     )}
                     {seed.tags && seed.tags.length > 0 && (
