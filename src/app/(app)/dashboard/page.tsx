@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [logs] = useLocalStorage<LogEntry[]>('logs', []);
   const { allTasks } = useTasks();
 
-  const lowStockSeeds = useMemo(() => seeds.filter((seed) => !seed.isWishlist && seed.stock < 10), [seeds]);
+  const lowStockSeeds = useMemo(() => seeds.filter((seed) => !seed.isWishlist && seed.packetCount < 10), [seeds]);
   
   const nextTask = useMemo(() => {
     // Simple sort, can be improved with date-fns if more complex logic is needed
@@ -59,7 +59,7 @@ export default function DashboardPage() {
                 {lowStockSeeds.length > 0 ? (
                   <div>
                     <p className="font-bold text-destructive">
-                      {lowStockSeeds.length} item(s) are low on stock!
+                      {lowStockSeeds.length} item(s) are low on packets!
                     </p>
                     <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
                       {lowStockSeeds.map((seed) => (

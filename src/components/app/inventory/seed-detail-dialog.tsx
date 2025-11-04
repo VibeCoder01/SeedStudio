@@ -39,9 +39,8 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
   }, [onOpenChange, onEdit, seed]);
 
   const handleScheduleClick = useCallback(() => {
-    onOpenChange(false); // Close this dialog
     setScheduleDialogOpen(true);
-  }, [onOpenChange]);
+  }, []);
 
   const handleScheduleSave = useCallback((task: ScheduledTask) => {
     setScheduledTasks(currentTasks => [...currentTasks, task]);
@@ -101,14 +100,18 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <h4 className="font-semibold">Packets in Stock</h4>
-                    <p>{seed.isWishlist ? 'Wishlist Item' : seed.stock}</p>
+                    <p>{seed.isWishlist ? 'Wishlist Item' : seed.packetCount}</p>
                 </div>
+                 <div>
+                    <h4 className="font-semibold">Seeds Per Packet</h4>
+                    <p>{seed.seedsPerPacket || 'N/A'}</p>
+                </div>
+            </div>
+             <div className="grid grid-cols-3 gap-4">
                  <div>
                     <h4 className="font-semibold">Purchase Year</h4>
                     <p>{seed.purchaseYear || 'N/A'}</p>
                 </div>
-            </div>
-             <div className="grid grid-cols-3 gap-4">
                 <div>
                     <h4 className="font-semibold">Planting Depth</h4>
                     <p>{seed.plantingDepth || 'N/A'}</p>

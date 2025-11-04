@@ -3,7 +3,8 @@ export interface Seed {
   id: string;
   name: string;
   source: string;
-  stock: number;
+  packetCount: number;
+  seedsPerPacket?: number;
   imageId: string;
   notes: string;
   plantingDepth?: string;

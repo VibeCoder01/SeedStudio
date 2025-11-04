@@ -42,7 +42,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type SortKey = keyof Seed | 'stock';
+type SortKey = keyof Seed | 'packetCount';
 
 export default function InventoryPage() {
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
@@ -257,8 +257,8 @@ export default function InventoryPage() {
                     Name {getSortIndicator('name')}
                   </Button>
                   {activeTab === 'stock' && (
-                    <Button variant="outline" size="sm" onClick={() => requestSort('stock')}>
-                      Stock {getSortIndicator('stock')}
+                    <Button variant="outline" size="sm" onClick={() => requestSort('packetCount')}>
+                      Packets {getSortIndicator('packetCount')}
                     </Button>
                   )}
               </div>
@@ -305,6 +305,8 @@ export default function InventoryPage() {
               const imageData = getImageData(seed.imageId);
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
+              const totalSeeds = seed.packetCount * (seed.seedsPerPacket || 0);
+
               return (
                 <Card key={seed.id} className={isSelected ? 'ring-2 ring-primary' : ''}>
                   <CardHeader className="p-0">
@@ -341,12 +343,19 @@ export default function InventoryPage() {
                   </CardHeader>
                   <CardContent className="p-6 pt-2">
                     {!seed.isWishlist && (
-                        <p className="mb-2">
-                            Packets in Stock: <span className="font-bold">{seed.stock}</span>
-                        </p>
+                        <div className="text-sm">
+                            <p>
+                                Packets: <span className="font-bold">{seed.packetCount}</span>
+                            </p>
+                            {seed.seedsPerPacket && (
+                                <p className="text-muted-foreground">
+                                    ~{totalSeeds.toLocaleString()} seeds total
+                                </p>
+                            )}
+                        </div>
                     )}
                     {seed.tags && seed.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 mt-2">
                         {seed.tags.map(tag => (
                           <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                         ))}

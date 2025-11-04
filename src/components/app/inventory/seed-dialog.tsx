@@ -40,7 +40,8 @@ import { TagInput } from '@/components/ui/tag-input';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   source: z.string().min(2, { message: 'Source must be at least 2 characters.' }),
-  stock: z.coerce.number().int().min(0, { message: 'Stock must be a positive number.' }),
+  packetCount: z.coerce.number().int().min(0, { message: 'Packet count must be a positive number.' }),
+  seedsPerPacket: z.coerce.number().int().min(0).optional(),
   imageId: z.string().min(1, { message: 'Please select an image.' }),
   notes: z.string().optional(),
   plantingDepth: z.string().optional(),
@@ -67,7 +68,8 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     defaultValues: {
       name: '',
       source: '',
-      stock: 0,
+      packetCount: 0,
+      seedsPerPacket: undefined,
       imageId: '',
       notes: '',
       plantingDepth: '',
@@ -93,7 +95,8 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       form.reset({
         name: '',
         source: '',
-        stock: 0,
+        packetCount: 0,
+        seedsPerPacket: undefined,
         imageId: '',
         notes: '',
         plantingDepth: '',
@@ -121,10 +124,10 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       description: `${data.name} has been saved successfully.`,
     });
     
-    if (seed && !seed.isWishlist && seed.stock >= 10 && newSeed.stock < 10) {
+    if (seed && !seed.isWishlist && seed.packetCount >= 10 && newSeed.packetCount < 10) {
        toast({
         title: 'Low Stock Alert',
-        description: `${newSeed.name} is running low.`,
+        description: `${newSeed.name} is running low on packets.`,
       });
     }
   };
@@ -189,19 +192,34 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
               )}
             />
             {!isWishlist && (
-              <FormField
-                control={form.control}
-                name="stock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Packets in Stock</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="packetCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Packets in Stock</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="seedsPerPacket"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seeds Per Packet</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="e.g., 50" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
             <FormField
               control={form.control}

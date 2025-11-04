@@ -101,13 +101,13 @@ export default function LogsPage() {
     if (log.taskId === 'planting' && log.seedId && log.quantity) {
       const plantedSeed = getSeedById(log.seedId);
       if (plantedSeed) {
-        const newStock = plantedSeed.stock - log.quantity;
-        setSeeds(currentSeeds => currentSeeds.map(s => s.id === log.seedId ? {...s, stock: newStock} : s));
+        const newPacketCount = plantedSeed.packetCount - log.quantity;
+        setSeeds(currentSeeds => currentSeeds.map(s => s.id === log.seedId ? {...s, packetCount: newPacketCount} : s));
         
-        if (newStock < 10 && plantedSeed.stock >= 10) {
+        if (newPacketCount < 10 && plantedSeed.packetCount >= 10) {
            toast({
             title: 'Low Stock Alert',
-            description: `${plantedSeed.name} is running low.`,
+            description: `${plantedSeed.name} is running low on packets.`,
           });
         }
       }
