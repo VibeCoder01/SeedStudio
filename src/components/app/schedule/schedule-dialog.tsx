@@ -75,7 +75,8 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
   const onSubmit = (data: ScheduleFormValues) => {
     const newScheduledTask: ScheduledTask = {
       id: scheduledTask?.id || crypto.randomUUID(),
-      ...data,
+      taskId: data.taskId,
+      recurrence: data.recurrence,
       notes: data.notes || '',
       startDate: data.startDate ? data.startDate.toISOString() : undefined,
     };
@@ -133,7 +134,7 @@ export function ScheduleDialog({ isOpen, onOpenChange, onSave, scheduledTask, ta
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select how often" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {recurrences.map((r) => (
