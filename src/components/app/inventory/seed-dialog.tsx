@@ -34,6 +34,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { TagInput } from '@/components/ui/tag-input';
 
 
 const formSchema = z.object({
@@ -45,7 +46,7 @@ const formSchema = z.object({
   plantingDepth: z.string().optional(),
   daysToGermination: z.coerce.number().int().min(0).optional(),
   daysToHarvest: z.coerce.number().int().min(0).optional(),
-  tags: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   purchaseYear: z.coerce.number().optional(),
   isWishlist: z.boolean().default(false),
 });
@@ -72,7 +73,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       plantingDepth: '',
       daysToGermination: 0,
       daysToHarvest: 0,
-      tags: '',
+      tags: [],
       purchaseYear: new Date().getFullYear(),
       isWishlist: false,
     },
@@ -85,7 +86,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         daysToGermination: seed.daysToGermination ?? undefined,
         daysToHarvest: seed.daysToHarvest ?? undefined,
         purchaseYear: seed.purchaseYear ?? new Date().getFullYear(),
-        tags: seed.tags?.join(', ') || '',
+        tags: seed.tags || [],
         isWishlist: seed.isWishlist ?? false,
       });
     } else {
@@ -98,7 +99,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         plantingDepth: '',
         daysToGermination: undefined,
         daysToHarvest: undefined,
-        tags: '',
+        tags: [],
         purchaseYear: new Date().getFullYear(),
         isWishlist: false,
       });
@@ -110,7 +111,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       id: seed?.id || crypto.randomUUID(),
       ...data,
       notes: data.notes || '',
-      tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+      tags: data.tags || [],
     };
     onSave(newSeed);
     onOpenChange(false);
@@ -227,20 +228,27 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
               )}
             />
              <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., heirloom, full-sun, organic" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Add comma-separated tags to help organize your seeds.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags</FormLabel>
+                    <FormControl>
+                      <TagInput
+                        {...field}
+                        placeholder="Enter a tag"
+                        tags={field.value || []}
+                        onChange={(tags) => {
+                          field.onChange(tags);
+                        }}
+                      />
+                    </FormControl>
+                     <FormDescription>
+                      Add tags to help organize your seeds.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
             />
             <div className="grid grid-cols-2 gap-4">
                 <FormField
