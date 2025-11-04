@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -326,7 +325,7 @@ export default function InventoryPage() {
               const imageData = getImageData(seed.imageId);
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
-              const totalSeeds = seed.packetCount * (seed.seedsPerPacket || 0);
+              const totalSeeds = (seed.packetCount || 0) * (seed.seedsPerPacket || 0);
               const isLowStock = !seed.isWishlist && seed.packetCount < 10;
 
               return (
@@ -442,3 +441,5 @@ export default function InventoryPage() {
     </>
   );
 }
+
+    
