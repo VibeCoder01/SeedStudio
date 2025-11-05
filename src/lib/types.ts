@@ -13,6 +13,7 @@ export interface Seed {
   tags?: string[];
   purchaseYear?: number;
   isWishlist?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface TaskType {

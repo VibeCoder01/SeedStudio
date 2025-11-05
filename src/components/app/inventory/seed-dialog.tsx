@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -46,10 +47,11 @@ const formSchema = z.object({
   notes: z.string().optional(),
   plantingDepth: z.string().optional(),
   daysToGermination: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
-  daysToHarvest: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  daysToHarvest: z.union([z-string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   tags: z.array(z.string()).optional(),
   purchaseYear: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   isWishlist: z.boolean().default(false),
+  lowStockThreshold: z.union([z.string(), z.number()]).transform(val => val === '' ? 10 : Number(val)).optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -78,6 +80,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       tags: [],
       purchaseYear: new Date().getFullYear(),
       isWishlist: false,
+      lowStockThreshold: 10,
     },
   });
 
@@ -93,6 +96,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         notes: seed.notes || '',
         plantingDepth: seed.plantingDepth || '',
         isWishlist: seed.isWishlist ?? false,
+        lowStockThreshold: seed.lowStockThreshold ?? 10,
       });
     } else {
       form.reset({
@@ -108,6 +112,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         tags: [],
         purchaseYear: new Date().getFullYear(),
         isWishlist: false,
+        lowStockThreshold: 10,
       });
     }
   }, [seed, form, isOpen]);
@@ -127,6 +132,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       tags: data.tags || [],
       purchaseYear: data.purchaseYear,
       isWishlist: data.isWishlist,
+      lowStockThreshold: data.lowStockThreshold,
     };
     onSave(newSeed);
     onOpenChange(false);
@@ -136,7 +142,10 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       description: `${data.name} has been saved successfully.`,
     });
     
-    if (seed && !seed.isWishlist && seed.packetCount >= 10 && newSeed.packetCount < 10) {
+    const lowStockThreshold = newSeed.lowStockThreshold ?? 10;
+    const oldLowStockThreshold = seed?.lowStockThreshold ?? 10;
+    
+    if (seed && !seed.isWishlist && seed.packetCount >= oldLowStockThreshold && newSeed.packetCount < lowStockThreshold) {
        toast({
         title: 'Low Stock Alert',
         description: `${newSeed.name} is running low on packets.`,
@@ -376,6 +385,33 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 )}
               />
             </div>
+             {!isWishlist && (
+                <FormField
+                  control={form.control}
+                  name="lowStockThreshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Low Stock Threshold</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="e.g., 10"
+                          value={field.value ?? ''}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' ? undefined : Number(value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Get a warning when packet count falls below this number.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
              <FormField
               control={form.control}
               name="notes"

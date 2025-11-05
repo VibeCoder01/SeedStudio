@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import type { Seed, ScheduledTask } from '@/lib/types';
@@ -105,6 +106,10 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
                  <div>
                     <h4 className="font-semibold">Seeds Per Packet</h4>
                     <p>{seed.seedsPerPacket || 'N/A'}</p>
+                </div>
+                 <div>
+                    <h4 className="font-semibold">Low Stock At</h4>
+                    <p>{seed.lowStockThreshold ?? 10} packets</p>
                 </div>
             </div>
              <div className="grid grid-cols-3 gap-4">

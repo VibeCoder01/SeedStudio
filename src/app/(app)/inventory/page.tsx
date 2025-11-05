@@ -46,6 +46,8 @@ import { cn } from '@/lib/utils';
 
 type SortKey = 'name' | 'packetCount';
 
+const DEFAULT_LOW_STOCK_THRESHOLD = 10;
+
 export default function InventoryPage() {
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -319,11 +321,12 @@ export default function InventoryPage() {
               const packetCount = Number(seed.packetCount) || 0;
               const seedsPerPacket = Number(seed.seedsPerPacket) || 0;
               let totalSeeds: number | null = null;
-              if (packetCount > 0 && seedsPerPacket > 0) {
+              if (seedsPerPacket > 0) {
                 totalSeeds = packetCount * seedsPerPacket;
               }
               
-              const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < 10;
+              const lowStockThreshold = seed.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
+              const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < lowStockThreshold;
 
               return (
                 <Card key={seed.id} className={cn(
@@ -370,7 +373,7 @@ export default function InventoryPage() {
                             </p>
                             {totalSeeds !== null && (
                                 <p className="text-muted-foreground">
-                                    Approx. {totalSeeds.toLocaleString()} seeds total
+                                    ~{totalSeeds.toLocaleString()} seeds total
                                 </p>
                             )}
                         </div>

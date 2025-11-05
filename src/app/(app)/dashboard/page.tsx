@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -25,7 +26,10 @@ export default function DashboardPage() {
   const [logs] = useLocalStorage<LogEntry[]>('logs', []);
   const { allTasks } = useTasks();
 
-  const lowStockSeeds = useMemo(() => seeds.filter((seed) => !seed.isWishlist && seed.packetCount < 10), [seeds]);
+  const lowStockSeeds = useMemo(() => seeds.filter((seed) => {
+    const threshold = seed.lowStockThreshold ?? 10;
+    return !seed.isWishlist && seed.packetCount < threshold;
+  }), [seeds]);
   
   const nextTask = useMemo(() => {
     // Simple sort, can be improved with date-fns if more complex logic is needed
