@@ -21,13 +21,20 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value)
-      setIsPopoverOpen(e.target.value.length > 0)
+      const value = e.target.value;
+      setInputValue(value);
+      // Only open popover if there's input
+      if (value) {
+        setIsPopoverOpen(true);
+      } else {
+        setIsPopoverOpen(false);
+      }
     }
 
     const addTag = (newTag: string) => {
-      if (newTag && !tags.includes(newTag)) {
-        onChange([...tags, newTag])
+      const trimmedTag = newTag.trim()
+      if (trimmedTag && !tags.includes(trimmedTag)) {
+        onChange([...tags, trimmedTag])
       }
       setInputValue("")
       setIsPopoverOpen(false)
@@ -35,11 +42,11 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if ((e.key === "Enter" || e.key === ",")) {
-        e.preventDefault()
-        const newTag = inputValue.trim()
-        if (newTag) {
-          addTag(newTag)
+      if (e.key === "Enter" || e.key === ",") {
+        // This is handled by onSelect in CommandItem if popover is open
+        if (!isPopoverOpen) {
+          e.preventDefault()
+          addTag(inputValue)
         }
       } else if (e.key === "Backspace" && inputValue === "" && tags.length > 0) {
         removeTag(tags[tags.length - 1])
@@ -58,6 +65,7 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
         !tags.includes(suggestion)
     );
     
+    // Determine if popover should be open
     const popoverShouldBeOpen = isPopoverOpen && filteredSuggestions.length > 0 && inputValue.length > 0;
 
     return (
@@ -82,8 +90,11 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
         ))}
          <Command
             onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    e.preventDefault();
+                // Let Command component handle Enter, ArrowUp, ArrowDown
+                if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    if (popoverShouldBeOpen) {
+                        e.preventDefault();
+                    }
                 }
             }}
             className="flex-1 bg-transparent"
@@ -95,8 +106,13 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setIsPopoverOpen(inputValue.length > 0)}
-                onBlur={() => setIsPopoverOpen(false)}
+                onFocus={() => {
+                  if (inputValue) setIsPopoverOpen(true)
+                }}
+                onBlur={() => {
+                  // Delay closing to allow for click on suggestion
+                  setTimeout(() => setIsPopoverOpen(false), 150)
+                }}
                 className={cn(
                   "bg-transparent text-sm outline-none placeholder:text-muted-foreground w-full min-w-[60px]",
                   className
@@ -110,7 +126,11 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
                       {filteredSuggestions.slice(0, 10).map((suggestion) => (
                         <CommandItem
                           key={suggestion}
-                          onMouseDown={(e) => e.preventDefault()}
+                          onMouseDown={(e) => {
+                            // Prevent input blur
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           onSelect={() => addTag(suggestion)}
                           className="cursor-pointer"
                         >
