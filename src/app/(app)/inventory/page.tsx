@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -317,7 +318,10 @@ export default function InventoryPage() {
               
               const packetCount = Number(seed.packetCount) || 0;
               const seedsPerPacket = Number(seed.seedsPerPacket) || 0;
-              const totalSeeds = packetCount * seedsPerPacket;
+              let totalSeeds: number | null = null;
+              if (packetCount > 0 && seedsPerPacket > 0) {
+                totalSeeds = packetCount * seedsPerPacket;
+              }
               
               const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < 10;
 
@@ -364,9 +368,9 @@ export default function InventoryPage() {
                             <p>
                                 Packets: <span className="font-bold">{packetCount}</span>
                             </p>
-                            {seedsPerPacket > 0 && (
+                            {totalSeeds !== null && (
                                 <p className="text-muted-foreground">
-                                    ~{totalSeeds.toLocaleString()} seeds total
+                                    Approx. {totalSeeds.toLocaleString()} seeds total
                                 </p>
                             )}
                         </div>
