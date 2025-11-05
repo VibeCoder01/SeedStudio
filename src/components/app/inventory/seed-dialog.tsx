@@ -47,7 +47,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   plantingDepth: z.string().optional(),
   daysToGermination: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
-  daysToHarvest: z.union([z-string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  daysToHarvest: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   tags: z.array(z.string()).optional(),
   purchaseYear: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   isWishlist: z.boolean().default(false),
@@ -434,3 +434,5 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     </Dialog>
   );
 }
+
+    
