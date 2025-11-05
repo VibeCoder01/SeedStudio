@@ -33,7 +33,7 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" || e.key === ",") {
+      if ((e.key === "Enter" || e.key === ",") && !isPopoverOpen) {
         e.preventDefault()
         const newTag = inputValue.trim()
         addTag(newTag)
@@ -51,9 +51,11 @@ const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
         suggestion.toLowerCase().includes(inputValue.toLowerCase()) &&
         !tags.includes(suggestion)
     );
+    
+    const popoverShouldBeOpen = isPopoverOpen && filteredSuggestions.length > 0 && inputValue.length > 0;
 
     return (
-      <Popover open={isPopoverOpen && filteredSuggestions.length > 0 && inputValue.length > 0} onOpenChange={setIsPopoverOpen}>
+      <Popover open={popoverShouldBeOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger asChild>
           <div className="flex flex-wrap gap-2 rounded-md border border-input p-2 items-center">
             {tags.map((tag: string, index: number) => (
