@@ -318,13 +318,10 @@ export default function InventoryPage() {
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
               
-              const packetCount = Number(seed.packetCount) || 0;
-              const seedsPerPacket = Number(seed.seedsPerPacket) || 0;
-              let totalSeeds: number | null = null;
-              if (seedsPerPacket > 0) {
-                totalSeeds = packetCount * seedsPerPacket;
-              }
-              
+              const packetCount = seed.packetCount > 0 ? seed.packetCount : 0;
+              const seedsPerPacket = seed.seedsPerPacket && seed.seedsPerPacket > 0 ? seed.seedsPerPacket : 0;
+              const totalSeeds = packetCount * seedsPerPacket;
+
               const lowStockThreshold = seed.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
               const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < lowStockThreshold;
 
@@ -371,9 +368,9 @@ export default function InventoryPage() {
                             <p>
                                 Packets: <span className="font-bold">{packetCount}</span>
                             </p>
-                            {totalSeeds !== null && (
+                            {totalSeeds > 0 && (
                                 <p className="text-muted-foreground">
-                                    ~{totalSeeds.toLocaleString()} seeds total
+                                    Approx. {totalSeeds.toLocaleString()} seeds total
                                 </p>
                             )}
                         </div>
