@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { subDays, isAfter } from 'date-fns';
 import type { LogEntry, TaskType } from '@/lib/types';
@@ -22,15 +22,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ActivityChart({ logs, tasks }: ActivityChartProps) {
+function ActivityChartComponent({ logs, tasks }: ActivityChartProps) {
   const chartData = useMemo(() => {
     const thirtyDaysAgo = subDays(new Date(), 30);
     const recentLogs = logs.filter((log) => isAfter(new Date(log.date), thirtyDaysAgo));
 
-    const activityCounts = tasks.map((task) => ({
+    const activityCounts = tasks.map((task, index) => ({
       name: task.name,
       count: recentLogs.filter((log) => log.taskId === task.id).length,
-      fill: `hsl(var(--chart-${(tasks.indexOf(task) % 5) + 1}))`,
+      fill: `hsl(var(--chart-${(index % 5) + 1}))`,
     })).filter(item => item.count > 0);
 
     return activityCounts;
@@ -57,3 +57,5 @@ export function ActivityChart({ logs, tasks }: ActivityChartProps) {
       </ChartContainer>
   );
 }
+
+export const ActivityChart = React.memo(ActivityChartComponent);

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { subDays, isAfter, format } from 'date-fns';
 import type { LogEntry, Seed } from '@/lib/types';
@@ -27,7 +27,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function HarvestChart({ logs, seeds }: HarvestChartProps) {
+function HarvestChartComponent({ logs, seeds }: HarvestChartProps) {
   const chartData = useMemo(() => {
     const thirtyDaysAgo = subDays(new Date(), 30);
     const harvestLogs = logs.filter(
@@ -85,8 +85,10 @@ export function HarvestChart({ logs, seeds }: HarvestChartProps) {
           />
           <XAxis dataKey="weight" type="number" hide />
           <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-          <Bar dataKey="weight" layout="vertical" radius={5} />
+          <Bar dataKey="weight" layout="vertical" radius={5} fill="var(--color-weight)" />
         </BarChart>
       </ChartContainer>
   );
 }
+
+export const HarvestChart = React.memo(HarvestChartComponent);
