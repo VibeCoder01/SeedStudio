@@ -36,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { TagInput } from '@/components/ui/tag-input';
+import { GARDENING_TAGS } from '@/lib/tag-data';
 
 
 const formSchema = z.object({
@@ -291,8 +292,9 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormLabel>Tags</FormLabel>
                     <FormControl>
                         <TagInput
-                          placeholder="Enter a tag"
+                          placeholder="Enter a tag and press enter..."
                           tags={field.value || []}
+                          suggestions={GARDENING_TAGS}
                           onChange={(tags: string[]) => {
                             field.onChange(tags);
                           }}
@@ -434,5 +436,3 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     </Dialog>
   );
 }
-
-    
