@@ -56,3 +56,14 @@ export interface JournalEntry {
   content: string;
   photoIds?: string[];
 }
+
+export interface Planting {
+  id: string;
+  seedId: string;
+  sowingDate: string; // ISO string
+  germinationDate?: string; // ISO string
+  pottingUpDate?: string; // ISO string
+  hardeningOffDate?: string; // ISO string
+  plantingOutDate?: string; // ISO string
+  notes?: string;
+}
