@@ -26,7 +26,7 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
     const debouncedSearchTerm = useDebounce(inputValue, 100);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Sync internal state with external props when popover opens/closes
+    // Sync internal state with external props when popover opens/closes or tags change
     useEffect(() => {
       setSelectedTags(tags);
     }, [tags, popoverOpen]);
@@ -65,24 +65,18 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
       setInputValue(e.target.value)
     }
 
-    const handleAddCustomTag = () => {
-      const trimmedTag = inputValue.trim();
-      if(trimmedTag && !selectedTags.includes(trimmedTag)) {
-        // We add it to suggestions so it appears in the list, and then we select it
-        toggleTag(trimmedTag);
-      }
-      setInputValue("");
-    };
-
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         e.preventDefault();
         const trimmedTag = inputValue.trim();
         let finalTags = selectedTags;
-        if(trimmedTag && !selectedTags.includes(trimmedTag)) {
-            finalTags = [...selectedTags, trimmedTag];
-            setSelectedTags(finalTags);
+
+        // If there's a new tag typed, add it to the list first
+        if (trimmedTag && !finalTags.includes(trimmedTag)) {
+          finalTags = [...finalTags, trimmedTag];
         }
+
+        // Save the final list and close
         onChange(finalTags);
         setPopoverOpen(false);
       }
