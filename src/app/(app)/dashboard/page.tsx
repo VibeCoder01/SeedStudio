@@ -131,19 +131,7 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {logs.length > 0 ? (
-                <ActivityChart logs={logs} tasks={allTasks} />
-            ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-center h-60">
-                    <h3 className="text-xl font-bold tracking-tight">No activity logged yet</h3>
-                    <p className="text-muted-foreground">Log your first activity to see a chart here.</p>
-                    <Button className="mt-4" asChild>
-                        <Link href="/logs">
-                            Add a Log
-                        </Link>
-                    </Button>
-                </div>
-            )}
+            <ActivityChart logs={logs} tasks={allTasks} />
           </CardContent>
         </Card>
       </div>

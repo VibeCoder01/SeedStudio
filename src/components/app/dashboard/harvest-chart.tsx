@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { subDays, isAfter, format } from 'date-fns';
+import { subDays, isAfter } from 'date-fns';
 import type { LogEntry, Seed } from '@/lib/types';
 import {
   ChartContainer,
@@ -11,7 +11,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 

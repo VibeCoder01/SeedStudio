@@ -11,6 +11,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface ActivityChartProps {
   logs: LogEntry[];
@@ -38,7 +41,17 @@ function ActivityChartComponent({ logs, tasks }: ActivityChartProps) {
   }, [logs, tasks]);
 
   if (chartData.length === 0) {
-    return null;
+    return (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-center h-60">
+            <h3 className="text-xl font-bold tracking-tight">No activity logged yet</h3>
+            <p className="text-muted-foreground">Log your first activity to see a chart here.</p>
+            <Button className="mt-4" asChild>
+                <Link href="/logs">
+                    Add a Log
+                </Link>
+            </Button>
+        </div>
+    );
   }
 
   return (
