@@ -30,8 +30,10 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
     const [selectedTags, setSelectedTags] = useState<string[]>(tags)
 
     useEffect(() => {
+      if (open) {
         setSelectedTags(tags);
-    }, [tags])
+      }
+    }, [open, tags]);
 
     const handleSave = () => {
         onChange(selectedTags)
@@ -68,7 +70,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
       }
     };
     
-    const allAvailableTags = Array.from(new Set([...suggestions, ...tags])).sort();
+    const allAvailableTags = Array.from(new Set([...suggestions, ...selectedTags])).sort();
     
     const filteredSuggestions = allAvailableTags.filter(suggestion =>
       suggestion.toLowerCase().includes(inputValue.toLowerCase())
@@ -108,7 +110,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
                       onSelect={() => toggleTag(suggestion)}
                       className="flex items-center gap-2"
                     >
-                      <Checkbox checked={selectedTags.includes(suggestion)} />
+                      <Checkbox checked={selectedTags.includes(suggestion)} onCheckedChange={() => toggleTag(suggestion)} />
                       {suggestion}
                     </CommandItem>
                   ))}
