@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
@@ -11,13 +12,13 @@ import { Input } from "./input"
 import { Checkbox } from "./checkbox"
 import { ScrollArea } from "./scroll-area"
 
-interface TagSelectorProps {
+interface TagInputProps {
   tags: string[]
   onChange: (tags: string[]) => void
   suggestions?: string[]
 }
 
-const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
+const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
   ({ tags, onChange, suggestions = [] }, ref) => {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [inputValue, setInputValue] = useState("")
@@ -25,7 +26,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
     const debouncedSearchTerm = useDebounce(inputValue, 100);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Sync internal state with external props
+    // Sync internal state with external props when popover opens/closes
     useEffect(() => {
       setSelectedTags(tags);
     }, [tags, popoverOpen]);
@@ -126,15 +127,14 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
             <ScrollArea className="h-60">
                  <div className="p-1">
                     {filteredSuggestions.map((suggestion) => (
-                        <button
+                        <div
                             key={suggestion}
-                            type="button"
                             onClick={() => toggleTag(suggestion)}
-                            className="w-full flex items-center rounded-sm px-2 py-1.5 text-sm text-left hover:bg-accent"
+                            className="w-full flex items-center rounded-sm px-2 py-1.5 text-sm text-left hover:bg-accent cursor-pointer"
                         >
                             <Checkbox className="mr-2" checked={selectedTags.includes(suggestion)} readOnly />
                             <span>{suggestion}</span>
-                        </button>
+                        </div>
                     ))}
                  </div>
             </ScrollArea>
@@ -150,6 +150,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
   }
 )
 
-TagSelector.displayName = "TagSelector"
+TagInput.displayName = "TagInput";
 
-export { TagSelector as TagInput };
+export { TagInput };
+
