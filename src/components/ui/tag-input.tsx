@@ -1,20 +1,15 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { ChevronDown } from "lucide-react"
+import React, { useState, useEffect, useRef } from "react"
+import { ChevronDown, X } from "lucide-react"
 
 import { useDebounce } from "@/hooks/use-debounce"
 import { Badge } from "@/components/ui/badge"
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import { Button } from "./button"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Input } from "./input"
 import { Checkbox } from "./checkbox"
+import { ScrollArea } from "./scroll-area"
 
 interface TagSelectorProps {
   tags: string[]
@@ -23,15 +18,25 @@ interface TagSelectorProps {
 }
 
 const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
-  ({ tags, onChange, suggestions = [], ...props }, ref) => {
+  ({ tags, onChange, suggestions = [] }, ref) => {
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [inputValue, setInputValue] = useState("")
     const [selectedTags, setSelectedTags] = useState<string[]>(tags)
-    const debouncedSearchTerm = useDebounce(inputValue, 300);
+    const debouncedSearchTerm = useDebounce(inputValue, 100);
+    const inputRef = useRef<HTMLInputElement>(null);
 
+    // Sync internal state with external props
     useEffect(() => {
       setSelectedTags(tags);
-    }, [tags]);
+    }, [tags, popoverOpen]);
+    
+    // Focus input when popover opens
+    useEffect(() => {
+        if(popoverOpen) {
+            inputRef.current?.focus();
+        }
+    }, [popoverOpen])
+
 
     const handleSave = () => {
       onChange(selectedTags)
@@ -39,7 +44,6 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
     }
 
     const handleCancel = () => {
-      setSelectedTags(tags);
       setPopoverOpen(false)
     }
     
@@ -47,8 +51,6 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
         setPopoverOpen(isOpen);
         if (!isOpen) {
             handleCancel();
-        } else {
-            setSelectedTags(tags);
         }
     }
 
@@ -65,7 +67,8 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
     const handleAddCustomTag = () => {
       const trimmedTag = inputValue.trim();
       if(trimmedTag && !selectedTags.includes(trimmedTag)) {
-        setSelectedTags(prev => [...prev, trimmedTag])
+        // We add it to suggestions so it appears in the list, and then we select it
+        toggleTag(trimmedTag);
       }
       setInputValue("");
     };
@@ -77,19 +80,29 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
       }
     };
     
-    const allAvailableTags = Array.from(new Set([...suggestions, ...selectedTags])).sort();
+    const allAvailableTags = Array.from(new Set([...suggestions, ...tags, ...selectedTags])).sort();
     
-    const filteredSuggestions = allAvailableTags.filter(suggestion =>
-      suggestion.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    );
+    const filteredSuggestions = debouncedSearchTerm
+      ? allAvailableTags.filter(suggestion =>
+          suggestion.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        )
+      : allAvailableTags;
 
     return (
       <div>
         <div className="flex flex-wrap gap-2 rounded-md border border-input p-2 items-center text-sm min-h-10">
           {tags.length === 0 && <span className="text-muted-foreground px-1">No tags selected</span>}
           {tags.map((tag) => (
-            <Badge key={tag} variant="secondary">
+            <Badge key={tag} variant="secondary" className="flex items-center gap-1">
               {tag}
+              <button
+                type="button"
+                className="rounded-full hover:bg-muted-foreground/20"
+                onClick={() => onChange(tags.filter(t => t !== tag))}
+                aria-label={`Remove ${tag}`}
+              >
+                  <X className="h-3 w-3" />
+              </button>
             </Badge>
           ))}
         </div>
@@ -100,30 +113,32 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-            <div className="p-2">
+            <div className="p-2 border-b">
               <Input 
+                ref={inputRef}
                 placeholder="Create or find a tag..."
                 value={inputValue}
                 onChange={handleInputChange}
                 onKeyDown={handleInputKeyDown}
               />
             </div>
-            <Command>
-              <CommandList className="max-h-60">
-                <CommandGroup>
-                  {filteredSuggestions.map((suggestion) => (
-                    <CommandItem
-                      key={suggestion}
-                      value={suggestion}
-                      onSelect={() => toggleTag(suggestion)}
-                    >
-                      <Checkbox className="mr-2" checked={selectedTags.includes(suggestion)} />
-                      <span>{suggestion}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
+            
+            <ScrollArea className="h-60">
+                 <div className="p-1">
+                    {filteredSuggestions.map((suggestion) => (
+                        <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => toggleTag(suggestion)}
+                            className="w-full flex items-center rounded-sm px-2 py-1.5 text-sm text-left hover:bg-accent"
+                        >
+                            <Checkbox className="mr-2" checked={selectedTags.includes(suggestion)} readOnly />
+                            <span>{suggestion}</span>
+                        </button>
+                    ))}
+                 </div>
+            </ScrollArea>
+           
             <div className="flex justify-end gap-2 p-2 border-t">
               <Button variant="ghost" size="sm" onClick={handleCancel}>Cancel</Button>
               <Button size="sm" onClick={handleSave}>Save Tags</Button>
