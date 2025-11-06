@@ -29,14 +29,15 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
     // Sync internal state with external props when popover opens/closes or tags change
     useEffect(() => {
       setSelectedTags(tags);
-    }, [tags, popoverOpen]);
+    }, [tags]);
     
     // Focus input when popover opens
     useEffect(() => {
         if(popoverOpen) {
+            setSelectedTags(tags); // Ensure internal state is fresh when opening
             inputRef.current?.focus();
         }
-    }, [popoverOpen])
+    }, [popoverOpen, tags])
 
 
     const handleSave = () => {
