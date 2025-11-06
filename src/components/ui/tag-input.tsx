@@ -77,7 +77,14 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        handleAddCustomTag();
+        const trimmedTag = inputValue.trim();
+        let finalTags = selectedTags;
+        if(trimmedTag && !selectedTags.includes(trimmedTag)) {
+            finalTags = [...selectedTags, trimmedTag];
+            setSelectedTags(finalTags);
+        }
+        onChange(finalTags);
+        setPopoverOpen(false);
       }
     };
     
@@ -153,4 +160,3 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
 TagInput.displayName = "TagInput";
 
 export { TagInput };
-

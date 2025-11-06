@@ -17,7 +17,8 @@ The central hub of your gardening world. The dashboard provides an at-a-glance o
 A powerful system for organizing your seed collection.
 - **Track Key Details:** For each seed, you can record its name, source, planting instructions, germination time, and more.
 - **Packet & Seed Count:** Log both the number of packets and the approximate number of seeds per packet for a precise inventory.
-- **Tagging & Filtering:** Organize your seeds with custom tags (e.g., "heirloom", "full-sun") and use the powerful filter and search tools to quickly find what you need.
+- **Advanced Tagging:** Organize your seeds with custom tags. A pop-up tag manager allows you to create new tags or select from a dynamic, searchable list of over 100 predefined suggestions.
+- **Filtering & Search:** Use the powerful filter and search tools to quickly find what you need by name, source, or tags.
 - **Wishlist:** Keep a separate list of seeds you want to buy or acquire in the future.
 - **Seed Viability:** Input the purchase year for your seeds, and the app will automatically flag older packets that may have lower germination rates.
 
