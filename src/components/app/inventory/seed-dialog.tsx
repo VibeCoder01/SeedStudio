@@ -292,7 +292,6 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormLabel>Tags</FormLabel>
                     <FormControl>
                         <TagInput
-                          placeholder="Enter a tag and press enter..."
                           tags={field.value || []}
                           suggestions={GARDENING_TAGS}
                           onChange={(tags: string[]) => {

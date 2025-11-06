@@ -1,135 +1,131 @@
 
 "use client"
 
-import React from "react"
-import { X } from "lucide-react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
+import { X, ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { Button } from "./button"
+import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Input } from "./input"
+import { Checkbox } from "./checkbox"
 
-interface TagInputProps extends Omit<React.ComponentPropsWithoutRef<typeof Input>, "onChange"> {
+interface TagSelectorProps {
   tags: string[]
   onChange: (tags: string[]) => void
   suggestions?: string[]
 }
 
-const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
-  ({ className, tags, onChange, suggestions = [], ...props }, ref) => {
-    const inputRef = React.useRef<HTMLInputElement>(null)
-    const [inputValue, setInputValue] = React.useState("")
-    const [isFocused, setIsFocused] = React.useState(false)
+const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
+  ({ tags, onChange, suggestions = [], ...props }, ref) => {
+    const [open, setOpen] = useState(false)
+    const [inputValue, setInputValue] = useState("")
+    const [selectedTags, setSelectedTags] = useState<string[]>(tags)
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value)
+    useEffect(() => {
+        setSelectedTags(tags);
+    }, [tags])
+
+    const handleSave = () => {
+        onChange(selectedTags)
+        setOpen(false)
     }
 
-    const addTag = (newTag: string) => {
-      const trimmedTag = newTag.trim()
-      if (trimmedTag && !tags.includes(trimmedTag)) {
-        onChange([...tags, trimmedTag])
-      }
-      setInputValue("")
+    const handleCancel = () => {
+        setSelectedTags(tags);
+        setOpen(false)
     }
 
-    const removeTag = (tagToRemove: string) => {
-      onChange(tags.filter((tag) => tag !== tagToRemove))
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if ((e.key === "Enter" || e.key === ",") && inputValue) {
-        e.preventDefault()
-        addTag(inputValue)
-      } else if (e.key === "Backspace" && inputValue === "" && tags.length > 0) {
-        removeTag(tags[tags.length - 1])
-      }
+    const toggleTag = (tag: string) => {
+        setSelectedTags(prev => 
+            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+        )
     }
     
-    const filteredSuggestions = suggestions.filter(
-      (suggestion) =>
-        suggestion.toLowerCase().includes(inputValue.toLowerCase()) &&
-        !tags.includes(suggestion)
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value)
+    }
+
+    const handleAddTag = () => {
+        const trimmedTag = inputValue.trim();
+        if(trimmedTag && !selectedTags.includes(trimmedTag)) {
+            setSelectedTags(prev => [...prev, trimmedTag])
+        }
+        setInputValue("");
+    }
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddTag();
+      }
+    };
+    
+    const allAvailableTags = Array.from(new Set([...suggestions, ...tags])).sort();
+    
+    const filteredSuggestions = allAvailableTags.filter(suggestion =>
+      suggestion.toLowerCase().includes(inputValue.toLowerCase())
     );
 
-    const showSuggestions = isFocused && inputValue && filteredSuggestions.length > 0;
-
     return (
-      <Command
-        className="relative"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            if (showSuggestions) {
-              // Let cmdk handle it
-            } else {
-              handleKeyDown(e as any);
-            }
-          } else {
-            handleKeyDown(e as any);
-          }
-        }}
-      >
-        <div
-          className="group flex flex-wrap gap-2 rounded-md border border-input p-2 items-center text-sm"
-          onClick={() => inputRef.current?.focus()}
-        >
-          {tags.map((tag, index) => (
-            <Badge key={index} variant="secondary">
+      <div>
+        <div className="flex flex-wrap gap-2 rounded-md border border-input p-2 items-center text-sm min-h-10">
+          {tags.length === 0 && <span className="text-muted-foreground px-1">No tags selected</span>}
+          {tags.map((tag) => (
+            <Badge key={tag} variant="secondary">
               {tag}
-              <button
-                type="button"
-                className="ml-2 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onClick={(e) => {
-                  e.stopPropagation() // prevent focus on input
-                  removeTag(tag)
-                }}
-              >
-                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-              </button>
             </Badge>
           ))}
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            className={cn(
-              "bg-transparent outline-none placeholder:text-muted-foreground flex-1 min-w-[60px]",
-              className
-            )}
-            {...props}
-          />
         </div>
-        
-        {showSuggestions && (
-          <div className="absolute top-[calc(100%+0.5rem)] left-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
-            <CommandList>
-              <CommandGroup>
-                {filteredSuggestions.slice(0, 10).map((suggestion) => (
-                  <CommandItem
-                    key={suggestion}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                    }}
-                    onSelect={() => {
-                      addTag(suggestion)
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {suggestion}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </div>
-        )}
-      </Command>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="mt-2 w-full" ref={ref}>
+              Select Tags <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <div className="p-2">
+                <Input 
+                    placeholder="Create or find a tag..."
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleInputKeyDown}
+                />
+            </div>
+            <Command>
+              <CommandList className="max-h-60">
+                <CommandGroup>
+                  {filteredSuggestions.map((suggestion) => (
+                    <CommandItem
+                      key={suggestion}
+                      onSelect={() => toggleTag(suggestion)}
+                      className="flex items-center gap-2"
+                    >
+                      <Checkbox checked={selectedTags.includes(suggestion)} />
+                      {suggestion}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+            <div className="flex justify-end gap-2 p-2 border-t">
+                <Button variant="ghost" size="sm" onClick={handleCancel}>Cancel</Button>
+                <Button size="sm" onClick={handleSave}>Save Tags</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     )
   }
 )
 
-TagInput.displayName = "TagInput"
+TagSelector.displayName = "TagSelector"
 
-export { TagInput }
+export { TagSelector as TagInput };
