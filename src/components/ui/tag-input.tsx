@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -117,10 +116,9 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
                       key={suggestion}
                       value={suggestion}
                       onSelect={() => toggleTag(suggestion)}
-                      className="flex items-center gap-2"
                     >
-                      <Checkbox checked={selectedTags.includes(suggestion)} />
-                      {suggestion}
+                      <Checkbox className="mr-2" checked={selectedTags.includes(suggestion)} />
+                      <span>{suggestion}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
