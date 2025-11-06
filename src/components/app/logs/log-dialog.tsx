@@ -21,6 +21,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Form,
   FormControl,
   FormDescription,
@@ -73,6 +83,8 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | undefined>(undefined);
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<LogFormValues | null>(null);
 
   const form = useForm<LogFormValues>({
     resolver: zodResolver(formSchema),
@@ -159,7 +171,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
     }
   };
 
-  const onSubmit = (data: LogFormValues) => {
+  const executeSave = (data: LogFormValues) => {
     const newLog: LogEntry = {
       id: log?.id || crypto.randomUUID(),
       taskId: data.taskId,
@@ -180,62 +192,57 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       description: 'Your garden log has been updated.',
     });
   };
+
+  const onSubmit = (data: LogFormValues) => {
+    if (data.taskId === 'planting' && data.seedId && data.quantity) {
+      const selectedSeed = seeds?.find(s => s.id === data.seedId);
+      if (selectedSeed && data.quantity > selectedSeed.packetCount) {
+        setFormData(data);
+        setOverrideDialogOpen(true);
+        return;
+      }
+    }
+    executeSave(data);
+  };
+  
+  const handleOverrideConfirm = () => {
+    if (formData) {
+      executeSave(formData);
+    }
+    setOverrideDialogOpen(false);
+    setFormData(null);
+  }
   
   const availableSeeds = seeds?.filter(s => !s.isWishlist);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{log?.id ? 'Edit Log Entry' : 'Add New Log Entry'}</DialogTitle>
-          <DialogDescription>
-            {log?.id ? 'Update the details for this log.' : 'Add a new activity to your garden log.'}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
-            <FormField
-              control={form.control}
-              name="taskId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Activity</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an activity" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {tasks.map((task) => (
-                        <SelectItem key={task.id} value={task.id}>
-                          {task.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {(taskId === 'planting' || taskId === 'harvesting') && availableSeeds && (
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{log?.id ? 'Edit Log Entry' : 'Add New Log Entry'}</DialogTitle>
+            <DialogDescription>
+              {log?.id ? 'Update the details for this log.' : 'Add a new activity to your garden log.'}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
               <FormField
                 control={form.control}
-                name="seedId"
+                name="taskId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Seed</FormLabel>
+                    <FormLabel>Activity</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a seed" />
+                          <SelectValue placeholder="Select an activity" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableSeeds.map((seed) => (
-                          <SelectItem key={seed.id} value={seed.id}>
-                            {seed.name}
+                        {tasks.map((task) => (
+                          <SelectItem key={task.id} value={task.id}>
+                            {task.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -244,17 +251,103 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   </FormItem>
                 )}
               />
-            )}
-            
-            {taskId === 'planting' && (
-              <>
+
+              {(taskId === 'planting' || taskId === 'harvesting') && availableSeeds && (
+                <FormField
+                  control={form.control}
+                  name="seedId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seed</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a seed" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availableSeeds.map((seed) => (
+                            <SelectItem key={seed.id} value={seed.id}>
+                              {seed.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {taskId === 'planting' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Packets Planted</FormLabel>
+                          <FormControl>
+                            <Input type="number" min="0" placeholder="e.g., 1" {...field} value={field.value ?? ''} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="quantityGerminated"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Qty Germinated</FormLabel>
+                          <FormControl>
+                            <Input type="number" min="0" placeholder="e.g., 8" {...field} value={field.value ?? ''} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Greenhouse" {...field} value={field.value ?? ''} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="substrate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Substrate</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Peat Pellets" {...field} value={field.value ?? ''} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </>
+              )}
+
+              {taskId === 'harvesting' && (
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantity Planted</FormLabel>
+                        <FormLabel>Quantity Harvested</FormLabel>
                         <FormControl>
                           <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
                         </FormControl>
@@ -264,181 +357,137 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   />
                   <FormField
                     control={form.control}
-                    name="quantityGerminated"
+                    name="weight"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Qty Germinated</FormLabel>
+                        <FormLabel>Weight (lbs)</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" placeholder="e.g., 8" {...field} value={field.value ?? ''} />
+                          <Input type="number" min="0" step="0.1" placeholder="e.g., 2.5" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                   <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Greenhouse" {...field} value={field.value ?? ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="substrate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Substrate</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Peat Pellets" {...field} value={field.value ?? ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </>
-            )}
+              )}
 
-            {taskId === 'harvesting' && (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantity Harvested</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Weight (lbs)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" step="0.1" placeholder="e.g., 2.5" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Any details about the activity..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="photoId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Photo</FormLabel>
+                    <FormControl>
+                      <div>
+                        <Input 
+                          type="file" 
+                          className="hidden"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          onChange={handleFileChange}
+                        />
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={!!photoPreview}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload Photo
                         </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Any details about the activity..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="photoId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Photo</FormLabel>
-                  <FormControl>
-                    <div>
-                      <Input 
-                        type="file" 
-                        className="hidden"
-                        ref={fileInputRef}
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                       <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={!!photoPreview}
-                        >
-                           <Upload className="mr-2 h-4 w-4" />
-                           Upload Photo
-                       </Button>
-                    </div>
-                  </FormControl>
-                   {photoPreview && (
-                    <div className="mt-2 relative w-full h-48">
-                      <Image src={photoPreview} alt="Preview" fill className="rounded-md object-cover" />
-                       <Button 
-                          type="button" 
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6"
-                          onClick={handleRemovePhoto}
-                        >
-                          <X className="h-4 w-4" />
-                       </Button>
-                    </div>
-                  )}
-                  <FormDescription>
-                    Optional: Attach a photo to this log entry (max 4MB).
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit">Save</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                      </div>
+                    </FormControl>
+                    {photoPreview && (
+                      <div className="mt-2 relative w-full h-48">
+                        <Image src={photoPreview} alt="Preview" fill className="rounded-md object-cover" />
+                        <Button 
+                            type="button" 
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6"
+                            onClick={handleRemovePhoto}
+                          >
+                            <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    <FormDescription>
+                      Optional: Attach a photo to this log entry (max 4MB).
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Save</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Insufficient Stock</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are trying to plant more packets than you have in stock. This will result in a negative inventory count. Do you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFormData(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleOverrideConfirm}>Plant Anyway</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

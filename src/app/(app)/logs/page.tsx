@@ -101,11 +101,12 @@ export default function LogsPage() {
     if (log.taskId === 'planting' && log.seedId && log.quantity) {
       const plantedSeed = getSeedById(log.seedId);
       if (plantedSeed) {
-        // Prevent negative stock
-        const newPacketCount = Math.max(0, plantedSeed.packetCount - log.quantity);
+        // Here we allow negative stock based on the override dialog
+        const newPacketCount = plantedSeed.packetCount - log.quantity;
         setSeeds(currentSeeds => currentSeeds.map(s => s.id === log.seedId ? {...s, packetCount: newPacketCount} : s));
         
-        if (newPacketCount < 10 && plantedSeed.packetCount >= 10) {
+        const lowStockThreshold = plantedSeed.lowStockThreshold ?? 10;
+        if (newPacketCount < lowStockThreshold && plantedSeed.packetCount >= lowStockThreshold) {
            toast({
             title: 'Low Stock Alert',
             description: `${plantedSeed.name} is running low on packets.`,
