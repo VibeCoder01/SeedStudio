@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -318,16 +317,18 @@ export default function InventoryPage() {
               const isSelected = selectedSeeds.includes(seed.id);
               const isOldSeed = seed.purchaseYear && currentYear - seed.purchaseYear > 3;
               
-              const packetCount = seed.packetCount > 0 ? seed.packetCount : 0;
+              const packetCount = seed.packetCount;
               const seedsPerPacket = seed.seedsPerPacket && seed.seedsPerPacket > 0 ? seed.seedsPerPacket : 0;
               const totalSeeds = packetCount * seedsPerPacket;
 
               const lowStockThreshold = seed.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
               const isLowStock = !seed.isWishlist && packetCount > 0 && packetCount < lowStockThreshold;
+              const isOutOfStock = !seed.isWishlist && packetCount <= 0;
 
               return (
                 <Card key={seed.id} className={cn(
                     isSelected && 'ring-2 ring-primary',
+                    isOutOfStock && 'border-4 border-destructive',
                     isLowStock && 'border-4 border-yellow-500'
                 )}>
                   <CardHeader className="p-0">
