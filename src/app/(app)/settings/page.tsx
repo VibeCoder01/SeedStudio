@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { Plus, Trash2, Tag, Upload, Download, Sun, Moon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { DEFAULT_TASK_TYPES, INITIAL_SEEDS } from '@/lib/data';
-import type { TaskType, Seed, LogEntry, ScheduledTask } from '@/lib/types';
+import type { TaskType, Seed, LogEntry, ScheduledTask, JournalEntry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const [scheduledTasks, setScheduledTasks] = useLocalStorage<ScheduledTask[]>('scheduledTasks', []);
+  const [journalEntries, setJournalEntries] = useLocalStorage<JournalEntry[]>('journalEntries', []);
   
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,6 +86,7 @@ export default function SettingsPage() {
       logs,
       scheduledTasks,
       customTasks,
+      journalEntries,
       exportDate: new Date().toISOString(),
     };
     const dataStr = JSON.stringify(dataToExport, null, 2);
@@ -101,7 +103,7 @@ export default function SettingsPage() {
       title: 'Data Exported',
       description: 'Your data has been downloaded successfully.',
     });
-  }, [seeds, logs, scheduledTasks, customTasks, toast]);
+  }, [seeds, logs, scheduledTasks, customTasks, journalEntries, toast]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -120,19 +122,19 @@ export default function SettingsPage() {
         }
         const importedData = JSON.parse(text);
 
-        if (
-          !('seeds' in importedData) ||
-          !('logs' in importedData) ||
-          !('scheduledTasks' in importedData) ||
-          !('customTasks' in importedData)
-        ) {
-          throw new Error('File is missing required data.');
+        // Check for all keys, even if they are empty arrays
+        const requiredKeys = ['seeds', 'logs', 'scheduledTasks', 'customTasks', 'journalEntries'];
+        for (const key of requiredKeys) {
+            if (!(key in importedData)) {
+                 throw new Error(`File is missing required data key: "${key}".`);
+            }
         }
 
-        setSeeds(importedData.seeds);
-        setLogs(importedData.logs);
-        setScheduledTasks(importedData.scheduledTasks);
-        setCustomTasks(importedData.customTasks);
+        setSeeds(importedData.seeds || []);
+        setLogs(importedData.logs || []);
+        setScheduledTasks(importedData.scheduledTasks || []);
+        setCustomTasks(importedData.customTasks || []);
+        setJournalEntries(importedData.journalEntries || []);
         
         toast({
           title: 'Import Successful',
@@ -147,7 +149,7 @@ export default function SettingsPage() {
         toast({
           variant: 'destructive',
           title: 'Import Failed',
-          description: error.message || 'Could not parse the file.',
+          description: error.message || 'Could not parse the backup file.',
         });
       } finally {
         if(fileInputRef.current) {
@@ -155,8 +157,15 @@ export default function SettingsPage() {
         }
       }
     };
+    reader.onerror = () => {
+        toast({
+          variant: 'destructive',
+          title: 'File Read Error',
+          description: 'Could not read the selected file.',
+        });
+    }
     reader.readAsText(file);
-  }, [setSeeds, setLogs, setScheduledTasks, setCustomTasks, toast]);
+  }, [setSeeds, setLogs, setScheduledTasks, setCustomTasks, setJournalEntries, toast]);
 
 
   return (
