@@ -115,6 +115,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
                   {filteredSuggestions.map((suggestion) => (
                     <CommandItem
                       key={suggestion}
+                      value={suggestion}
                       onSelect={() => toggleTag(suggestion)}
                       className="flex items-center gap-2"
                     >
