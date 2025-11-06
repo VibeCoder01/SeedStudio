@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/components/theme-provider';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Task name must be at least 2 characters.'),
