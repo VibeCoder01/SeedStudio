@@ -39,7 +39,6 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
         }
     }, [popoverOpen, tags])
 
-
     const handleSave = () => {
       onChange(selectedTags)
       setPopoverOpen(false)
@@ -65,22 +64,22 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setInputValue(e.target.value)
     }
-
+    
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const trimmedTag = inputValue.trim();
-        let finalTags = selectedTags;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const trimmedTag = inputValue.trim();
+            let updatedTags = selectedTags;
 
-        // If there's a new tag typed, add it to the list first
-        if (trimmedTag && !finalTags.includes(trimmedTag)) {
-          finalTags = [...finalTags, trimmedTag];
+            // Add the currently typed tag if it's new
+            if (trimmedTag && !updatedTags.includes(trimmedTag)) {
+                updatedTags = [...updatedTags, trimmedTag];
+            }
+
+            // Call the main onChange to save and then close
+            onChange(updatedTags);
+            setPopoverOpen(false);
         }
-
-        // Save the final list and close
-        onChange(finalTags);
-        setPopoverOpen(false);
-      }
     };
     
     const allAvailableTags = Array.from(new Set([...suggestions, ...tags, ...selectedTags])).sort();
@@ -155,3 +154,4 @@ const TagInput = React.forwardRef<HTMLButtonElement, TagInputProps>(
 TagInput.displayName = "TagInput";
 
 export { TagInput };
+
