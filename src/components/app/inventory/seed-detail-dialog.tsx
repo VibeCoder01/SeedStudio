@@ -121,6 +121,10 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
                     <h4 className="font-semibold">Planting Depth</h4>
                     <p>{seed.plantingDepth || 'N/A'}</p>
                 </div>
+                 <div>
+                    <h4 className="font-semibold">Spacing</h4>
+                    <p>{seed.spacing || 'N/A'}</p>
+                </div>
                 <div>
                     <h4 className="font-semibold">Germination</h4>
                     <p>{seed.daysToGermination ? `${seed.daysToGermination} days` : 'N/A'}</p>

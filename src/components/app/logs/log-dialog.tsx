@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -52,6 +53,9 @@ const formSchema = z.object({
   seedId: z.string().optional(),
   quantity: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   weight: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  location: z.string().optional(),
+  substrate: z.string().optional(),
+  quantityGerminated: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
 });
 
 type LogFormValues = z.infer<typeof formSchema>;
@@ -80,6 +84,9 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       seedId: '',
       quantity: '',
       weight: '',
+      location: '',
+      substrate: '',
+      quantityGerminated: '',
     }
   });
 
@@ -96,6 +103,9 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
         seedId: log?.seedId || '',
         quantity: log?.quantity ?? '',
         weight: log?.weight ?? '',
+        location: log?.location ?? '',
+        substrate: log?.substrate ?? '',
+        quantityGerminated: log?.quantityGerminated ?? '',
       });
 
       if (log?.photoId) {
@@ -159,6 +169,9 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
       seedId: data.seedId,
       quantity: data.quantity,
       weight: data.weight,
+      location: data.location,
+      substrate: data.substrate,
+      quantityGerminated: data.quantityGerminated,
     };
     onSave(newLog);
     onOpenChange(false);
@@ -234,19 +247,64 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
             )}
             
             {taskId === 'planting' && (
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity Planted</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" placeholder="0" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity Planted</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="quantityGerminated"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Qty Germinated</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" placeholder="e.g., 8" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                   <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Greenhouse" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="substrate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Substrate</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Peat Pellets" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
             )}
 
             {taskId === 'harvesting' && (
@@ -256,7 +314,7 @@ export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: L
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Quantity</FormLabel>
+                      <FormLabel>Quantity Harvested</FormLabel>
                       <FormControl>
                         <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''} />
                       </FormControl>

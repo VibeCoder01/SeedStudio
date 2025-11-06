@@ -8,6 +8,7 @@ export interface Seed {
   imageId: string;
   notes: string;
   plantingDepth?: string;
+  spacing?: string;
   daysToGermination?: number;
   daysToHarvest?: number;
   tags?: string[];
@@ -29,8 +30,11 @@ export interface LogEntry {
   notes: string;
   photoId?: string; // ID referencing an image in IndexedDB
   seedId?: string;
-  quantity?: number;
-  weight?: number;
+  quantity?: number; // e.g., number of seeds planted or items harvested
+  weight?: number; // e.g., weight of harvest
+  location?: string; // e.g., "Greenhouse", "Plot A"
+  substrate?: string; // e.g., "Seed starting mix"
+  quantityGerminated?: number; // For tracking planting success
 }
 
 export type Recurrence = 'daily' | 'weekly' | 'bi-weekly' | 'monthly';

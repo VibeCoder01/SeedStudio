@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale, MapPin } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { INITIAL_SEEDS } from '@/lib/data';
 import type { LogEntry, Seed } from '@/lib/types';
@@ -151,6 +151,7 @@ export default function LogsPage() {
       const searchTermLower = searchTerm.toLowerCase();
       return (task?.name.toLowerCase().includes(searchTermLower) ||
               log.notes?.toLowerCase().includes(searchTermLower) ||
+              log.location?.toLowerCase().includes(searchTermLower) ||
               seed?.name.toLowerCase().includes(searchTermLower))
     });
   }, [logs, searchTerm, sortConfig, getTaskById, getSeedById]);
@@ -211,11 +212,18 @@ export default function LogsPage() {
                       <TableCell className="max-w-xs">
                         <div className="flex flex-col gap-1">
                           <span className="truncate">{log.notes || '–'}</span>
-                          {log.taskId === 'harvesting' && log.weight && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Scale className="h-3 w-3" /> {log.weight} lbs
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {log.location && (
+                                <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" /> {log.location}
+                                </span>
+                            )}
+                            {log.taskId === 'harvesting' && log.weight && (
+                                <span className="flex items-center gap-1">
+                                <Scale className="h-3 w-3" /> {log.weight} lbs
+                                </span>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>

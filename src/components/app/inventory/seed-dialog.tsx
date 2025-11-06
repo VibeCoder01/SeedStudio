@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -47,6 +47,7 @@ const formSchema = z.object({
   imageId: z.string().min(1, { message: 'Please select an image.' }),
   notes: z.string().optional(),
   plantingDepth: z.string().optional(),
+  spacing: z.string().optional(),
   daysToGermination: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   daysToHarvest: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   tags: z.array(z.string()).optional(),
@@ -76,6 +77,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       imageId: '',
       notes: '',
       plantingDepth: '',
+      spacing: '',
       daysToGermination: undefined,
       daysToHarvest: undefined,
       tags: [],
@@ -84,6 +86,20 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       lowStockThreshold: 10,
     },
   });
+
+  const handleInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const target = e.target as HTMLInputElement;
+      if (target.form) {
+        // Find the "Save" button and click it programmatically
+        const saveButton = target.form.querySelector<HTMLButtonElement>('button[type="submit"]');
+        if (saveButton) {
+          e.preventDefault();
+          saveButton.click();
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (seed) {
@@ -96,6 +112,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         tags: seed.tags || [],
         notes: seed.notes || '',
         plantingDepth: seed.plantingDepth || '',
+        spacing: seed.spacing || '',
         isWishlist: seed.isWishlist ?? false,
         lowStockThreshold: seed.lowStockThreshold ?? 10,
       });
@@ -108,6 +125,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         imageId: '',
         notes: '',
         plantingDepth: '',
+        spacing: '',
         daysToGermination: undefined,
         daysToHarvest: undefined,
         tags: [],
@@ -128,6 +146,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       imageId: data.imageId,
       notes: data.notes || '',
       plantingDepth: data.plantingDepth,
+      spacing: data.spacing,
       daysToGermination: data.daysToGermination,
       daysToHarvest: data.daysToHarvest,
       tags: data.tags || [],
@@ -320,7 +339,22 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     </FormItem>
                   )}
                 />
-                 <FormField
+                <FormField
+                  control={form.control}
+                  name="spacing"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Spacing</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 18 inches" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+             <div className="grid grid-cols-2 gap-4">
+               <FormField
                     control={form.control}
                     name="purchaseYear"
                     render={({ field }) => (
@@ -341,29 +375,29 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                       </FormItem>
                     )}
                   />
+                 <FormField
+                  control={form.control}
+                  name="daysToGermination"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Days to Germination</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 7"
+                          value={field.value ?? ''}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            field.onChange(value === '' ? undefined : Number(value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="daysToGermination"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Days to Germination</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 7"
-                        value={field.value ?? ''}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          field.onChange(value === '' ? undefined : Number(value));
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="daysToHarvest"
@@ -385,8 +419,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                   </FormItem>
                 )}
               />
-            </div>
-             {!isWishlist && (
+               {!isWishlist && (
                 <FormField
                   control={form.control}
                   name="lowStockThreshold"
@@ -405,14 +438,12 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                           }}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Get a warning when packet count falls below this number.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
             )}
+            </div>
              <FormField
               control={form.control}
               name="notes"
