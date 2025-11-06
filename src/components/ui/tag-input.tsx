@@ -1,10 +1,10 @@
 
 "use client"
 
-import React, { useState, useRef, useEffect, useCallback } from "react"
-import { X, ChevronDown } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { ChevronDown } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { Badge } from "@/components/ui/badge"
 import {
   Command,
@@ -25,55 +25,63 @@ interface TagSelectorProps {
 
 const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
   ({ tags, onChange, suggestions = [], ...props }, ref) => {
-    const [open, setOpen] = useState(false)
+    const [popoverOpen, setPopoverOpen] = useState(false)
     const [inputValue, setInputValue] = useState("")
     const [selectedTags, setSelectedTags] = useState<string[]>(tags)
+    const debouncedSearchTerm = useDebounce(inputValue, 300);
 
     useEffect(() => {
-      if (open) {
-        setSelectedTags(tags);
-      }
-    }, [open, tags]);
+      setSelectedTags(tags);
+    }, [tags]);
 
     const handleSave = () => {
-        onChange(selectedTags)
-        setOpen(false)
+      onChange(selectedTags)
+      setPopoverOpen(false)
     }
 
     const handleCancel = () => {
-        setSelectedTags(tags);
-        setOpen(false)
+      setSelectedTags(tags);
+      setPopoverOpen(false)
+    }
+    
+    const handleOpenChange = (isOpen: boolean) => {
+        setPopoverOpen(isOpen);
+        if (!isOpen) {
+            handleCancel();
+        } else {
+            setSelectedTags(tags);
+        }
     }
 
     const toggleTag = (tag: string) => {
-        setSelectedTags(prev => 
-            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-        )
+      setSelectedTags(prev => 
+        prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      )
     }
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(e.target.value)
+      setInputValue(e.target.value)
     }
 
-    const handleAddTag = () => {
-        const trimmedTag = inputValue.trim();
-        if(trimmedTag && !selectedTags.includes(trimmedTag)) {
-            setSelectedTags(prev => [...prev, trimmedTag])
-        }
-        setInputValue("");
-    }
+    const handleAddCustomTag = () => {
+      const trimmedTag = inputValue.trim();
+      if(trimmedTag && !selectedTags.includes(trimmedTag)) {
+        setSelectedTags(prev => [...prev, trimmedTag])
+      }
+      setInputValue("");
+    };
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        handleAddTag();
+        handleAddCustomTag();
       }
     };
     
     const allAvailableTags = Array.from(new Set([...suggestions, ...selectedTags])).sort();
     
     const filteredSuggestions = allAvailableTags.filter(suggestion =>
-      suggestion.toLowerCase().includes(inputValue.toLowerCase())
+      suggestion.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
 
     return (
@@ -86,7 +94,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
             </Badge>
           ))}
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={popoverOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="mt-2 w-full" ref={ref}>
               Select Tags <ChevronDown className="ml-2 h-4 w-4" />
@@ -94,12 +102,12 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
             <div className="p-2">
-                <Input 
-                    placeholder="Create or find a tag..."
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleInputKeyDown}
-                />
+              <Input 
+                placeholder="Create or find a tag..."
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleInputKeyDown}
+              />
             </div>
             <Command>
               <CommandList className="max-h-60">
@@ -110,7 +118,7 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
                       onSelect={() => toggleTag(suggestion)}
                       className="flex items-center gap-2"
                     >
-                      <Checkbox checked={selectedTags.includes(suggestion)} onCheckedChange={() => toggleTag(suggestion)} />
+                      <Checkbox checked={selectedTags.includes(suggestion)} />
                       {suggestion}
                     </CommandItem>
                   ))}
@@ -118,8 +126,8 @@ const TagSelector = React.forwardRef<HTMLButtonElement, TagSelectorProps>(
               </CommandList>
             </Command>
             <div className="flex justify-end gap-2 p-2 border-t">
-                <Button variant="ghost" size="sm" onClick={handleCancel}>Cancel</Button>
-                <Button size="sm" onClick={handleSave}>Save Tags</Button>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>Cancel</Button>
+              <Button size="sm" onClick={handleSave}>Save Tags</Button>
             </div>
           </PopoverContent>
         </Popover>
