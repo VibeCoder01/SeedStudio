@@ -66,4 +66,8 @@ export interface Planting {
   hardeningOffDate?: string; // ISO string
   plantingOutDate?: string; // ISO string
   notes?: string;
+  quantityPlanted?: number;
+  quantityGerminated?: number;
 }
+
+    

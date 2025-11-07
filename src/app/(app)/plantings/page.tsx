@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
@@ -72,6 +73,8 @@ export default function PlantingsPage() {
         date: planting.sowingDate,
         seedId: planting.seedId,
         notes: `Sowed ${seed?.name || 'seed'}. ${planting.notes || ''}`.trim(),
+        quantity: planting.quantityPlanted,
+        quantityGerminated: planting.quantityGerminated,
       };
       setLogs(current => [newLog, ...current]);
     }
@@ -108,6 +111,7 @@ export default function PlantingsPage() {
                 <TableHead>Potting Up</TableHead>
                 <TableHead>Hardening Off</TableHead>
                 <TableHead>Planting Out</TableHead>
+                <TableHead>Success Rate</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -122,6 +126,11 @@ export default function PlantingsPage() {
                     <TableCell>{formatDate(planting.pottingUpDate)}</TableCell>
                     <TableCell>{formatDate(planting.hardeningOffDate)}</TableCell>
                     <TableCell>{formatDate(planting.plantingOutDate)}</TableCell>
+                    <TableCell>
+                      {planting.quantityGerminated !== undefined || planting.quantityPlanted !== undefined
+                        ? `${planting.quantityGerminated ?? '–'} / ${planting.quantityPlanted ?? '–'}`
+                        : '–'}
+                    </TableCell>
                     <TableCell className="max-w-xs truncate">{planting.notes || '–'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -157,7 +166,7 @@ export default function PlantingsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={9} className="h-24 text-center">
                     No plantings recorded yet.
                   </TableCell>
                 </TableRow>
@@ -177,3 +186,5 @@ export default function PlantingsPage() {
     </>
   );
 }
+
+    

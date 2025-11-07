@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale, MapPin, Sprout } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { INITIAL_SEEDS } from '@/lib/data';
 import type { LogEntry, Seed } from '@/lib/types';
@@ -192,6 +192,7 @@ export default function LogsPage() {
                   </Button>
                 </TableHead>
                 <TableHead>Details</TableHead>
+                <TableHead>Germination</TableHead>
                 <TableHead>Photo</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -226,6 +227,14 @@ export default function LogsPage() {
                             )}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {log.taskId === 'planting' && (log.quantityGerminated !== undefined || log.quantity !== undefined) ? (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Sprout className="h-4 w-4 text-green-500" />
+                            <span>{log.quantityGerminated ?? '–'} / {log.quantity}</span>
+                          </div>
+                        ) : '–'}
                       </TableCell>
                       <TableCell>
                         {log.photoId ? (
@@ -269,7 +278,7 @@ export default function LogsPage() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     {searchTerm ? `No logs match your search for "${searchTerm}".` : 'No logs yet. Start by adding a new log entry.'}
                   </TableCell>
                 </TableRow>
@@ -299,3 +308,5 @@ export default function LogsPage() {
     </>
   );
 }
+
+    

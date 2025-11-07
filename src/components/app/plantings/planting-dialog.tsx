@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -39,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 const formSchema = z.object({
   seedId: z.string().min(1, 'Please select a seed.'),
@@ -48,6 +50,8 @@ const formSchema = z.object({
   hardeningOffDate: z.date().optional(),
   plantingOutDate: z.date().optional(),
   notes: z.string().optional(),
+  quantityPlanted: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
+  quantityGerminated: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
 });
 
 type PlantingFormValues = z.infer<typeof formSchema>;
@@ -101,6 +105,10 @@ const DatePickerField = ({ name, label, control }: { name: keyof PlantingFormVal
 export function PlantingDialog({ isOpen, onOpenChange, onSave, planting, seeds }: PlantingDialogProps) {
   const form = useForm<PlantingFormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      quantityPlanted: '',
+      quantityGerminated: '',
+    }
   });
 
   const parseOptionalDate = (dateString?: string) => {
@@ -117,6 +125,8 @@ export function PlantingDialog({ isOpen, onOpenChange, onSave, planting, seeds }
         hardeningOffDate: parseOptionalDate(planting?.hardeningOffDate),
         plantingOutDate: parseOptionalDate(planting?.plantingOutDate),
         notes: planting?.notes || '',
+        quantityPlanted: planting?.quantityPlanted ?? '',
+        quantityGerminated: planting?.quantityGerminated ?? '',
       });
     }
   }, [planting, form, isOpen]);
@@ -131,6 +141,8 @@ export function PlantingDialog({ isOpen, onOpenChange, onSave, planting, seeds }
       hardeningOffDate: data.hardeningOffDate?.toISOString(),
       plantingOutDate: data.plantingOutDate?.toISOString(),
       notes: data.notes,
+      quantityPlanted: data.quantityPlanted,
+      quantityGerminated: data.quantityGerminated,
     };
     onSave(newPlanting);
     onOpenChange(false);
@@ -171,6 +183,35 @@ export function PlantingDialog({ isOpen, onOpenChange, onSave, planting, seeds }
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quantityPlanted"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity Planted</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" placeholder="e.g., 10" {...field} value={field.value ?? ''}/>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantityGerminated"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qty Germinated</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" placeholder="e.g., 8" {...field} value={field.value ?? ''}/>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <DatePickerField name="sowingDate" label="Sowing Date" control={form.control} />
 
@@ -204,3 +245,5 @@ export function PlantingDialog({ isOpen, onOpenChange, onSave, planting, seeds }
     </Dialog>
   );
 }
+
+    
