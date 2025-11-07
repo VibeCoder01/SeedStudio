@@ -134,8 +134,14 @@ export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDet
                     <p>{seed.daysToHarvest ? `${seed.daysToHarvest} days` : 'N/A'}</p>
                 </div>
             </div>
+            {seed.germinationNotes && (
+              <div>
+                  <h4 className="font-semibold">Germination Notes</h4>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{seed.germinationNotes}</p>
+              </div>
+            )}
             <div>
-                <h4 className="font-semibold">Notes</h4>
+                <h4 className="font-semibold">General Notes</h4>
                 <p className="text-muted-foreground whitespace-pre-wrap">{seed.notes || 'No notes for this seed.'}</p>
             </div>
         </div>

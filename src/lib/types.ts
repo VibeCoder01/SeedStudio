@@ -15,6 +15,7 @@ export interface Seed {
   purchaseYear?: number;
   isWishlist?: boolean;
   lowStockThreshold?: number;
+  germinationNotes?: string;
 }
 
 export interface TaskType {
@@ -69,5 +70,3 @@ export interface Planting {
   quantityPlanted?: number;
   quantityGerminated?: number;
 }
-
-    

@@ -54,6 +54,7 @@ const formSchema = z.object({
   purchaseYear: z.union([z.string(), z.number()]).transform(val => val === '' ? undefined : Number(val)).optional(),
   isWishlist: z.boolean().default(false),
   lowStockThreshold: z.union([z.string(), z.number()]).transform(val => val === '' ? 10 : Number(val)).optional(),
+  germinationNotes: z.string().optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -84,6 +85,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       purchaseYear: new Date().getFullYear(),
       isWishlist: false,
       lowStockThreshold: 10,
+      germinationNotes: '',
     },
   });
 
@@ -115,6 +117,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         spacing: seed.spacing || '',
         isWishlist: seed.isWishlist ?? false,
         lowStockThreshold: seed.lowStockThreshold ?? 10,
+        germinationNotes: seed.germinationNotes ?? '',
       });
     } else {
       form.reset({
@@ -132,6 +135,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         purchaseYear: new Date().getFullYear(),
         isWishlist: false,
         lowStockThreshold: 10,
+        germinationNotes: '',
       });
     }
   }, [seed, form, isOpen]);
@@ -153,6 +157,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       purchaseYear: data.purchaseYear,
       isWishlist: data.isWishlist,
       lowStockThreshold: data.lowStockThreshold,
+      germinationNotes: data.germinationNotes,
     };
     onSave(newSeed);
     onOpenChange(false);
@@ -446,10 +451,23 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
             </div>
              <FormField
               control={form.control}
+              name="germinationNotes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Germination Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Special germination instructions, e.g., 'Soak overnight', 'Requires cold stratification'." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>General Notes</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Planting instructions, tips, etc." {...field} />
                   </FormControl>
