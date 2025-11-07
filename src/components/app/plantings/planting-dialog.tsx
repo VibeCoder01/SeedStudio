@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import type { Planting, Seed } from '@/lib/types';
+import type { Planting, SeedDetails } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -61,7 +61,7 @@ interface PlantingDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (planting: Planting) => void;
   planting?: Planting;
-  seeds: Seed[];
+  seeds: SeedDetails[];
 }
 
 const DatePickerField = ({ name, label, control }: { name: keyof PlantingFormValues, label: string, control: any }) => (

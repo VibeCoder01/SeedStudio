@@ -3,8 +3,8 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { INITIAL_SEEDS } from '@/lib/data';
-import type { Planting, Seed, LogEntry } from '@/lib/types';
+import { INITIAL_SEEDS, SEED_DATABASE } from '@/lib/data';
+import type { Planting, Seed, LogEntry, SeedDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
 import { PlantingDialog } from '@/components/app/plantings/planting-dialog';
 
+const getSeedDetails = (seed: Seed): SeedDetails | null => {
+  const details = SEED_DATABASE.find(s => s.id === seed.seedDetailsId);
+  if (!details) return null;
+  return { ...details, ...seed };
+}
+
+
 export default function PlantingsPage() {
   const [plantings, setPlantings] = useLocalStorage<Planting[]>('plantings', []);
   const [seeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
@@ -40,9 +47,13 @@ export default function PlantingsPage() {
   const [editingPlanting, setEditingPlanting] = useState<Planting | undefined>(undefined);
   const { toast } = useToast();
 
-  const getSeedById = useCallback((seedId: string) => {
-    return seeds.find((seed) => seed.id === seedId);
+  const allSeedDetails = useMemo(() => {
+    return seeds.map(getSeedDetails).filter((s): s is SeedDetails => s !== null);
   }, [seeds]);
+
+  const getSeedById = useCallback((seedId: string) => {
+    return allSeedDetails.find((seed) => seed.id === seedId);
+  }, [allSeedDetails]);
 
   const handleAdd = useCallback(() => {
     setEditingPlanting(undefined);
@@ -181,7 +192,7 @@ export default function PlantingsPage() {
         onOpenChange={setDialogOpen}
         onSave={handleSave}
         planting={editingPlanting}
-        seeds={seeds.filter(s => !s.isWishlist)}
+        seeds={allSeedDetails.filter(s => !s.isWishlist)}
       />
     </>
   );
