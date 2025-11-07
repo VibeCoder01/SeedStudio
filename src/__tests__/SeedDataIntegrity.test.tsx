@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { LogDialog } from '@/components/app/logs/log-dialog';
@@ -63,12 +62,11 @@ describe('Seed Data Integrity Checks', () => {
 
     // The LogDialog renders its content inside a form within a Dialog
     // We check if an option with the full name exists.
-    // Let's check for a seed we know is in the expanded database.
-    const seedNameFromDb = 'Lacinato Kale'; 
+    const seedNameFromDb = 'Common Rosemary'; 
     const seedOption = screen.getByRole('option', { name: seedNameFromDb, hidden: true });
     
     expect(seedOption).toBeInTheDocument();
-    expect(availableSeeds.length).toBeGreaterThan(4); // Ensure we are testing against the full list
+    expect(availableSeeds.length).toBe(INITIAL_SEEDS.length); 
   });
 
   it('PlantingDialog should receive and render full seed names from the database', () => {
@@ -83,17 +81,16 @@ describe('Seed Data Integrity Checks', () => {
       </TestWrapper>
     );
 
-    const seedNameFromDb = 'French Breakfast Radish';
+    const seedNameFromDb = 'Nantes Carrot';
     const seedOption = screen.getByRole('option', { name: seedNameFromDb, hidden: true });
 
     expect(seedOption).toBeInTheDocument();
-    expect(availableSeeds.length).toBeGreaterThan(4);
+    expect(availableSeeds.length).toBe(INITIAL_SEEDS.length);
   });
   
   it('InventoryPage should display seed names from the master database', () => {
     mockedUseLocalStorage.mockImplementation((key: string) => {
       if (key === 'seeds') {
-        // Return the initial seeds which require joining
         return [INITIAL_SEEDS, jest.fn()];
       }
       return [[], jest.fn()];
@@ -105,15 +102,13 @@ describe('Seed Data Integrity Checks', () => {
         </TestWrapper>
     );
 
-    // Check for a seed name that exists in the expanded DB
     const seedNameFromDb = 'Common Rosemary';
     
     // The name is rendered as a CardTitle
     const cardTitle = screen.getByText(seedNameFromDb);
     expect(cardTitle).toBeInTheDocument();
 
-    // Also check that we have more than the original 4 seeds rendering
-    const allCards = screen.getAllByRole('heading', { level: 2, 'hidden': true}); // CardTitle renders as div but has aria-level
+    const allCards = screen.getAllByRole('heading', { level: 2, 'hidden': true}); 
     expect(allCards.length).toBe(INITIAL_SEEDS.length);
   });
 });

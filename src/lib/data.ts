@@ -32,14 +32,6 @@ export const INITIAL_SEEDS: Seed[] = [
     purchaseYear: 2024,
   },
   {
-    id: 'user-lettuce-1',
-    seedDetailsId: 'db-romaine-lettuce',
-    source: 'Seed Swap',
-    packetCount: 0,
-    purchaseYear: 2023,
-    isWishlist: true,
-  },
-  {
     id: 'user-basil-1',
     seedDetailsId: 'db-genovese-basil',
     source: 'Local Farm',
