@@ -1,7 +1,6 @@
-
 'use client';
 import Image from 'next/image';
-import type { Seed, ScheduledTask } from '@/lib/types';
+import type { Seed, ScheduledTask, SeedDetails } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,8 +22,8 @@ import { Badge } from '@/components/ui/badge';
 interface SeedDetailDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  seed?: Seed;
-  onEdit: (seed: Seed) => void;
+  seed?: SeedDetails;
+  onEdit: (seed: SeedDetails) => void;
 }
 
 export function SeedDetailDialog({ isOpen, onOpenChange, seed, onEdit }: SeedDetailDialogProps) {

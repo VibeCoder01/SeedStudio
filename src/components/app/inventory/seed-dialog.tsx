@@ -1,10 +1,9 @@
-
 'use client';
 import { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { Seed } from '@/lib/types';
+import type { Seed, SeedDetails } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { TagInput } from '@/components/ui/tag-input';
 import { GARDENING_TAGS } from '@/lib/tag-data';
+import { SEED_DATABASE } from '@/lib/data';
 
 
 const formSchema = z.object({
@@ -55,6 +55,7 @@ const formSchema = z.object({
   isWishlist: z.boolean().default(false),
   lowStockThreshold: z.union([z.string(), z.number()]).transform(val => val === '' ? 10 : Number(val)).optional(),
   germinationNotes: z.string().optional(),
+  seedDetailsId: z.string().optional(),
 });
 
 type SeedFormValues = z.infer<typeof formSchema>;
@@ -63,7 +64,7 @@ interface SeedDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (seed: Seed) => void;
-  seed?: Seed;
+  seed?: SeedDetails;
 }
 
 export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogProps) {
@@ -102,6 +103,23 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
       }
     }
   }, []);
+  
+  const seedDetailsId = form.watch('seedDetailsId');
+  useEffect(() => {
+    if(seedDetailsId) {
+      const dbSeed = SEED_DATABASE.find(s => s.id === seedDetailsId);
+      if(dbSeed) {
+        form.setValue('name', dbSeed.name);
+        form.setValue('imageId', dbSeed.imageId);
+        form.setValue('plantingDepth', dbSeed.plantingDepth);
+        form.setValue('spacing', dbSeed.spacing);
+        form.setValue('daysToGermination', dbSeed.daysToGermination);
+        form.setValue('daysToHarvest', dbSeed.daysToHarvest);
+        form.setValue('tags', dbSeed.tags);
+        form.setValue('germinationNotes', dbSeed.germinationNotes);
+      }
+    }
+  }, [seedDetailsId, form]);
 
   useEffect(() => {
     if (seed) {
@@ -141,24 +159,21 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
   }, [seed, form, isOpen]);
 
   const onSubmit = (data: SeedFormValues) => {
+    // We only save the user-specific data to local storage
     const newSeed: Seed = {
       id: seed?.id || crypto.randomUUID(),
-      name: data.name,
+      seedDetailsId: data.seedDetailsId || seed?.seedDetailsId || crypto.randomUUID(), // This links to the DB or becomes the ID for a new custom entry
       source: data.source,
       packetCount: data.packetCount,
-      seedsPerPacket: data.seedsPerPacket,
-      imageId: data.imageId,
-      notes: data.notes || '',
-      plantingDepth: data.plantingDepth,
-      spacing: data.spacing,
-      daysToGermination: data.daysToGermination,
-      daysToHarvest: data.daysToHarvest,
-      tags: data.tags || [],
       purchaseYear: data.purchaseYear,
       isWishlist: data.isWishlist,
       lowStockThreshold: data.lowStockThreshold,
-      germinationNotes: data.germinationNotes,
+      userNotes: data.notes // We can rename notes to userNotes to distinguish
     };
+    
+    // Here you would also handle adding a new entry to the SEED_DATABASE if it's a custom seed
+    // For this example, we'll assume we are only editing the user-specific part
+    
     onSave(newSeed);
     onOpenChange(false);
     
@@ -173,12 +188,13 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
     if (seed && !seed.isWishlist && seed.packetCount >= oldLowStockThreshold && newSeed.packetCount < lowStockThreshold) {
        toast({
         title: 'Low Stock Alert',
-        description: `${newSeed.name} is running low on packets.`,
+        description: `${data.name} is running low on packets.`,
       });
     }
   };
   
   const isWishlist = form.watch('isWishlist');
+  const isEditing = !!seed;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -191,6 +207,34 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+             {!isEditing && (
+              <FormField
+                control={form.control}
+                name="seedDetailsId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seed Variety</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a seed from the database" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SEED_DATABASE.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>Or fill in the details below to add a custom seed.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
             <FormField
               control={form.control}
               name="isWishlist"
@@ -218,7 +262,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 <FormItem>
                   <FormLabel>Seed Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Cherry Tomato" {...field} />
+                    <Input placeholder="e.g., Cherry Tomato" {...field} disabled={!!seedDetailsId && !isEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -290,7 +334,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Image</FormLabel>
-                   <Select onValueChange={field.onChange} value={field.value}>
+                   <Select onValueChange={field.onChange} value={field.value} disabled={!!seedDetailsId && !isEditing}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an image" />
@@ -338,7 +382,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormItem>
                       <FormLabel>Planting Depth</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 1/4 inch" {...field} />
+                        <Input placeholder="e.g., 1/4 inch" {...field} disabled={!!seedDetailsId && !isEditing} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -351,7 +395,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                     <FormItem>
                       <FormLabel>Spacing</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., 18 inches" {...field} />
+                        <Input placeholder="e.g., 18 inches" {...field} disabled={!!seedDetailsId && !isEditing} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -395,6 +439,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                             const value = event.target.value;
                             field.onChange(value === '' ? undefined : Number(value));
                           }}
+                           disabled={!!seedDetailsId && !isEditing}
                         />
                       </FormControl>
                       <FormMessage />
@@ -418,6 +463,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                           const value = event.target.value;
                           field.onChange(value === '' ? undefined : Number(value));
                         }}
+                         disabled={!!seedDetailsId && !isEditing}
                       />
                     </FormControl>
                     <FormMessage />
@@ -456,7 +502,7 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
                 <FormItem>
                   <FormLabel>Germination Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Special germination instructions, e.g., 'Soak overnight', 'Requires cold stratification'." {...field} />
+                    <Textarea placeholder="Special germination instructions, e.g., 'Soak overnight', 'Requires cold stratification'." {...field} disabled={!!seedDetailsId && !isEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -467,9 +513,9 @@ export function SeedDialog({ isOpen, onOpenChange, onSave, seed }: SeedDialogPro
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>General Notes</FormLabel>
+                  <FormLabel>Your Personal Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Planting instructions, tips, etc." {...field} />
+                    <Textarea placeholder="Personal notes for this seed, specific to your garden." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

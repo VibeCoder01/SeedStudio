@@ -1,5 +1,6 @@
-import type { TaskType, Seed } from './types';
+import type { Seed, SeedDatabaseEntry, TaskType } from './types';
 import { Sprout, Droplets, Grape, Scissors, Bug, Shovel } from 'lucide-react';
+import seedDb from './seed-database.json';
 
 export const DEFAULT_TASK_TYPES: TaskType[] = [
   { id: 'planting', name: 'Planting', icon: Sprout },
@@ -10,57 +11,39 @@ export const DEFAULT_TASK_TYPES: TaskType[] = [
   { id: 'soil-prep', name: 'Soil Preparation', icon: Shovel },
 ];
 
+export const SEED_DATABASE: SeedDatabaseEntry[] = seedDb.seeds;
+
+// This is now just the user's personal inventory, referencing the master database
 export const INITIAL_SEEDS: Seed[] = [
   {
-    id: 'tomato-seeds-1',
-    name: 'Cherry Tomato',
+    id: 'user-tomato-1',
+    seedDetailsId: 'db-cherry-tomato',
     source: 'Garden Center',
     packetCount: 5,
-    seedsPerPacket: 50,
-    imageId: 'tomato-seeds',
-    notes: 'Plant in full sun, 24-36 inches apart. Water consistently.',
-    plantingDepth: '1/4 inch',
-    daysToGermination: 7,
-    daysToHarvest: 60,
-    tags: ['heirloom', 'full-sun'],
+    purchaseYear: 2023,
+    userNotes: 'These did great in the green pot last year.',
+    lowStockThreshold: 2,
   },
   {
-    id: 'carrot-seeds-1',
-    name: 'Nantes Carrot',
+    id: 'user-carrot-1',
+    seedDetailsId: 'db-nantes-carrot',
     source: 'Online Retailer',
     packetCount: 10,
-    seedsPerPacket: 200,
-    imageId: 'carrot-seeds',
-    notes: 'Sow seeds thinly in rows, 1/2 inch deep. Prefers loose, sandy soil.',
-    plantingDepth: '1/2 inch',
-    daysToGermination: 14,
-    daysToHarvest: 70,
-    tags: ['root-vegetable', 'cool-weather'],
+    purchaseYear: 2024,
   },
   {
-    id: 'lettuce-seeds-1',
-    name: 'Romaine Lettuce',
+    id: 'user-lettuce-1',
+    seedDetailsId: 'db-romaine-lettuce',
     source: 'Seed Swap',
     packetCount: 7,
-    seedsPerPacket: 150,
-    imageId: 'lettuce-seeds',
-    notes: 'A cool-weather crop. Plant in early spring or fall.',
-    plantingDepth: '1/8 inch',
-    daysToGermination: 8,
-    daysToHarvest: 50,
-    tags: ['leafy-green', 'cool-weather'],
+    purchaseYear: 2023,
+    isWishlist: true,
   },
     {
-    id: 'basil-seeds-1',
-    name: 'Genovese Basil',
+    id: 'user-basil-1',
+    seedDetailsId: 'db-genovese-basil',
     source: 'Local Farm',
     packetCount: 20,
-    seedsPerPacket: 100,
-    imageId: 'basil-seeds',
-    notes: 'Loves heat. Plant after the last frost. Pinch back leaves to encourage bushy growth.',
-    plantingDepth: '1/4 inch',
-    daysToGermination: 10,
-    daysToHarvest: 60,
-    tags: ['herb', 'full-sun', 'container-friendly'],
+    purchaseYear: 2024,
   }
 ];

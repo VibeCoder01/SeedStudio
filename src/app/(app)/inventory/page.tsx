@@ -1,10 +1,11 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Plus, Edit, Trash2, Search, X, Filter, History } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { INITIAL_SEEDS } from '@/lib/data';
-import type { Seed } from '@/lib/types';
+import { INITIAL_SEEDS, SEED_DATABASE } from '@/lib/data';
+import type { Seed, SeedDetails } from '@/lib/types';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,30 +48,68 @@ type SortKey = 'name' | 'packetCount';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 10;
 
+const getSeedDetails = (seed: Seed): SeedDetails => {
+  const details = SEED_DATABASE.find(s => s.id === seed.seedDetailsId);
+  if (!details) {
+    // This could happen if a user adds a custom seed that's not in the main DB yet.
+    // For now, we'll throw an error, but in a real app, we might handle this more gracefully.
+    // A better approach would be to store the custom seed details in a separate local storage
+    // or merge them into the SEED_DATABASE in memory.
+    // For this prototype, we'll assume a custom seed would have its details saved somewhere,
+    // but the current implementation of SeedDialog doesn't do that yet.
+    // We'll create a fallback.
+    
+    return {
+        id: seed.id, // The user's unique inventory ID
+        seedDetailsId: seed.seedDetailsId,
+        name: 'Custom Seed (Not Found)',
+        imageId: 'pepper-seeds', // A default image
+        notes: seed.userNotes || '',
+        ...seed
+    };
+  }
+  return { ...details, ...seed };
+}
+
+
 export default function InventoryPage() {
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [editingSeed, setEditingSeed] = useState<Seed | undefined>(undefined);
-  const [viewingSeed, setViewingSeed] = useState<Seed | undefined>(undefined);
+  const [editingSeed, setEditingSeed] = useState<SeedDetails | undefined>(undefined);
+  const [viewingSeed, setViewingSeed] = useState<SeedDetails | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'name', direction: 'ascending' });
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('stock');
   const { toast } = useToast();
+  
+  const allSeedDetails = useMemo(() => {
+    try {
+        return seeds.map(getSeedDetails)
+    } catch(e) {
+        console.error(e);
+        toast({
+            title: 'Data Error',
+            description: 'Could not load all seed details. Some data may be corrupt or missing.',
+            variant: 'destructive',
+        })
+        return [];
+    }
+  }, [seeds, toast]);
 
   const handleAdd = useCallback(() => {
     setEditingSeed(undefined);
     setDialogOpen(true);
   }, []);
 
-  const handleEdit = useCallback((seed: Seed) => {
+  const handleEdit = useCallback((seed: SeedDetails) => {
     setEditingSeed(seed);
     setDialogOpen(true);
   }, []);
   
-  const handleViewDetails = useCallback((seed: Seed) => {
+  const handleViewDetails = useCallback((seed: SeedDetails) => {
     setViewingSeed(seed);
     setDetailDialogOpen(true);
   }, []);
@@ -107,20 +146,20 @@ export default function InventoryPage() {
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    (seeds || []).forEach(seed => {
+    allSeedDetails.forEach(seed => {
       seed.tags?.forEach(tag => tags.add(tag));
     });
     return Array.from(tags).sort();
-  }, [seeds]);
+  }, [allSeedDetails]);
 
   const sortedAndFilteredSeeds = useMemo(() => {
     const isWishlist = activeTab === 'wishlist';
-    let sortableItems = (seeds || []).filter(seed => (seed.isWishlist || false) === isWishlist);
+    let sortableItems = allSeedDetails.filter(seed => (seed.isWishlist || false) === isWishlist);
 
     if (sortConfig !== null) {
       sortableItems = [...sortableItems].sort((a, b) => {
-        const valA = a[sortConfig.key];
-        const valB = b[sortConfig.key];
+        const valA = sortConfig.key === 'name' ? a.name : a.packetCount;
+        const valB = sortConfig.key === 'name' ? b.name : b.packetCount;
         if (valA < valB) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -141,7 +180,7 @@ export default function InventoryPage() {
 
       return matchesSearch && matchesTags;
     });
-  }, [seeds, searchTerm, sortConfig, selectedTags, activeTab]);
+  }, [allSeedDetails, searchTerm, sortConfig, selectedTags, activeTab]);
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return null;

@@ -1,0 +1,52 @@
+{
+  "seeds": [
+    {
+      "id": "db-cherry-tomato",
+      "name": "Cherry Tomato",
+      "imageId": "tomato-seeds",
+      "notes": "Plant in full sun, 24-36 inches apart. Water consistently. Indeterminate.",
+      "plantingDepth": "1/4 inch",
+      "spacing": "24-36 inches",
+      "daysToGermination": 7,
+      "daysToHarvest": 60,
+      "tags": ["heirloom", "full-sun", "indeterminate"],
+      "germinationNotes": "Start indoors 6-8 weeks before last frost. Keep soil consistently moist."
+    },
+    {
+      "id": "db-nantes-carrot",
+      "name": "Nantes Carrot",
+      "imageId": "carrot-seeds",
+      "notes": "Sow seeds thinly in rows. Prefers loose, sandy soil. Keep soil free of weeds.",
+      "plantingDepth": "1/2 inch",
+      "spacing": "2-4 inches",
+      "daysToGermination": 14,
+      "daysToHarvest": 70,
+      "tags": ["root-vegetable", "cool-weather", "direct-sow"],
+      "germinationNotes": "Carrot seeds are small; mix with sand for easier sowing. Do not transplant."
+    },
+    {
+      "id": "db-romaine-lettuce",
+      "name": "Romaine Lettuce",
+      "imageId": "lettuce-seeds",
+      "notes": "A cool-weather crop. Plant in early spring or fall. Can bolt in hot weather.",
+      "plantingDepth": "1/8 inch",
+      "spacing": "8-12 inches",
+      "daysToGermination": 8,
+      "daysToHarvest": 50,
+      "tags": ["leafy-green", "cool-weather", "slow-to-bolt"],
+      "germinationNotes": "Lettuce needs light to germinate, so do not cover seeds too deeply."
+    },
+    {
+      "id": "db-genovese-basil",
+      "name": "Genovese Basil",
+      "imageId": "basil-seeds",
+      "notes": "Loves heat. Plant after the last frost. Pinch back leaves to encourage bushy growth.",
+      "plantingDepth": "1/4 inch",
+      "spacing": "12 inches",
+      "daysToGermination": 10,
+      "daysToHarvest": 60,
+      "tags": ["herb", "full-sun", "container-friendly", "warm-weather"],
+      "germinationNotes": "Keep soil warm (around 70°F) for best germination."
+    }
+  ]
+}
