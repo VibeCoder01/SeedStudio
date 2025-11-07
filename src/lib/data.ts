@@ -35,15 +35,37 @@ export const INITIAL_SEEDS: Seed[] = [
     id: 'user-lettuce-1',
     seedDetailsId: 'db-romaine-lettuce',
     source: 'Seed Swap',
-    packetCount: 7,
+    packetCount: 0,
     purchaseYear: 2023,
     isWishlist: true,
   },
-    {
+  {
     id: 'user-basil-1',
     seedDetailsId: 'db-genovese-basil',
     source: 'Local Farm',
     packetCount: 20,
     purchaseYear: 2024,
-  }
+  },
+  {
+    id: 'user-jalapeno-1',
+    seedDetailsId: 'db-jalapeno-pepper',
+    source: 'Hardware Store',
+    packetCount: 8,
+    purchaseYear: 2024,
+  },
+  {
+    id: 'user-cucumber-1',
+    seedDetailsId: 'db-marketmore-cucumber',
+    source: 'Seed Catalog',
+    packetCount: 12,
+    purchaseYear: 2023,
+  },
+  {
+    id: 'user-rosemary-1',
+    seedDetailsId: 'db-common-rosemary',
+    source: 'Garden Center',
+    packetCount: 3,
+    purchaseYear: 2022,
+    userNotes: 'Struggles in winter, bring inside.',
+  },
 ];
