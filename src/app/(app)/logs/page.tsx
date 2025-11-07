@@ -67,7 +67,7 @@ export default function LogsPage() {
   const { toast } = useToast();
 
   const allSeedDetails = useMemo(() => {
-    return seeds.map(getSeedDetails).filter((s): s is SeedDetails => s !== null);
+    return seeds.map(s => getSeedDetails(s)).filter((s): s is SeedDetails => s !== null);
   }, [seeds]);
   
   const getSeedById = useCallback((seedId?: string) => {
