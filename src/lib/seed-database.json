@@ -9,7 +9,7 @@
       "spacing": "24-36 inches",
       "daysToGermination": 7,
       "daysToHarvest": 60,
-      "tags": ["heirloom", "full-sun", "indeterminate"],
+      "tags": ["heirloom", "full-sun", "indeterminate", "warm-weather"],
       "germinationNotes": "Start indoors 6-8 weeks before last frost. Keep soil consistently moist."
     },
     {
@@ -21,7 +21,7 @@
       "spacing": "2-4 inches",
       "daysToGermination": 14,
       "daysToHarvest": 70,
-      "tags": ["root-vegetable", "cool-weather", "direct-sow"],
+      "tags": ["root-vegetable", "cool-weather", "direct-sow", "full-sun"],
       "germinationNotes": "Carrot seeds are small; mix with sand for easier sowing. Do not transplant."
     },
     {
@@ -33,7 +33,7 @@
       "spacing": "8-12 inches",
       "daysToGermination": 8,
       "daysToHarvest": 50,
-      "tags": ["leafy-green", "cool-weather", "slow-to-bolt"],
+      "tags": ["leafy-green", "cool-weather", "slow-to-bolt", "part-shade"],
       "germinationNotes": "Lettuce needs light to germinate, so do not cover seeds too deeply."
     },
     {
@@ -47,6 +47,212 @@
       "daysToHarvest": 60,
       "tags": ["herb", "full-sun", "container-friendly", "warm-weather"],
       "germinationNotes": "Keep soil warm (around 70°F) for best germination."
-    }
+    },
+    {
+      "id": "db-jalapeno-pepper",
+      "name": "Jalapeño Pepper",
+      "imageId": "pepper-seeds",
+      "notes": "Loves sun and heat. Can be grown in containers. Wear gloves when handling seeds and fruit.",
+      "plantingDepth": "1/4 inch",
+      "spacing": "18-24 inches",
+      "daysToGermination": 10,
+      "daysToHarvest": 75,
+      "tags": ["vegetable", "full-sun", "heat-tolerant", "container-friendly"],
+      "germinationNotes": "Start indoors 8-10 weeks before last frost. Use a heat mat for best results."
+    },
+    {
+      "id": "db-marketmore-cucumber",
+      "name": "Marketmore Cucumber",
+      "imageId": "cucumber-seeds",
+      "notes": "Vining plant that needs a trellis. Prolific producer. Harvest often to encourage more fruit.",
+      "plantingDepth": "1/2 inch",
+      "spacing": "12 inches",
+      "daysToGermination": 7,
+      "daysToHarvest": 65,
+      "tags": ["vegetable", "full-sun", "vining", "direct-sow"],
+      "germinationNotes": "Plant after all danger of frost has passed and soil is warm."
+    },
+    {
+        "id": "db-lacinato-kale",
+        "name": "Lacinato Kale",
+        "imageId": "lettuce-seeds",
+        "notes": "Also known as Dinosaur Kale. Very cold hardy. Flavor improves after a light frost.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "18 inches",
+        "daysToGermination": 10,
+        "daysToHarvest": 60,
+        "tags": ["leafy-green", "cool-weather", "cold-hardy", "full-sun"],
+        "germinationNotes": "Can be direct-sown or started indoors 4-6 weeks before last frost."
+      },
+      {
+        "id": "db-french-breakfast-radish",
+        "name": "French Breakfast Radish",
+        "imageId": "carrot-seeds",
+        "notes": "Fast growing cool-weather crop. Plant in succession for a continuous harvest.",
+        "plantingDepth": "1/2 inch",
+        "spacing": "2 inches",
+        "daysToGermination": 5,
+        "daysToHarvest": 25,
+        "tags": ["root-vegetable", "cool-weather", "fast-growing", "direct-sow"],
+        "germinationNotes": "Sow directly into the garden as soon as soil can be worked."
+      },
+      {
+        "id": "db-bloomsdale-spinach",
+        "name": "Bloomsdale Spinach",
+        "imageId": "lettuce-seeds",
+        "notes": "Large, crinkly leaves. Slow to bolt. Prefers cool weather.",
+        "plantingDepth": "1/2 inch",
+        "spacing": "6 inches",
+        "daysToGermination": 10,
+        "daysToHarvest": 45,
+        "tags": ["leafy-green", "cool-weather", "slow-to-bolt", "part-shade"],
+        "germinationNotes": "Soak seeds overnight before planting to improve germination."
+      },
+      {
+        "id": "db-fordhook-giant-swiss-chard",
+        "name": "Fordhook Giant Swiss Chard",
+        "imageId": "lettuce-seeds",
+        "notes": "Can be harvested as baby greens or full-size leaves. Very productive.",
+        "plantingDepth": "1/2 inch",
+        "spacing": "12 inches",
+        "daysToGermination": 10,
+        "daysToHarvest": 60,
+        "tags": ["leafy-green", "cool-weather", "heat-tolerant", "full-sun"],
+        "germinationNotes": "Each seed is a cluster of several seeds, so thinning will be necessary."
+      },
+      {
+        "id": "db-common-chives",
+        "name": "Common Chives",
+        "imageId": "basil-seeds",
+        "notes": "Hardy perennial herb. Onion-like flavor. Edible purple flowers.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "6 inches",
+        "daysToGermination": 15,
+        "daysToHarvest": 60,
+        "tags": ["herb", "perennial", "full-sun", "container-friendly", "pollinator-friendly"],
+        "germinationNotes": "Can be slow to germinate. Keep soil moist."
+      },
+      {
+        "id": "db-slow-bolt-cilantro",
+        "name": "Slow Bolt Cilantro",
+        "imageId": "basil-seeds",
+        "notes": "Plant in succession for a continuous supply of leaves (cilantro) and seeds (coriander).",
+        "plantingDepth": "1/2 inch",
+        "spacing": "6 inches",
+        "daysToGermination": 10,
+        "daysToHarvest": 50,
+        "tags": ["herb", "cool-weather", "direct-sow", "slow-to-bolt"],
+        "germinationNotes": "Does not transplant well. Sow directly in the garden."
+      },
+      {
+        "id": "db-bouquet-dill",
+        "name": "Bouquet Dill",
+        "imageId": "basil-seeds",
+        "notes": "Used for both its leaves (dill weed) and seeds. Attracts beneficial insects.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "9 inches",
+        "daysToGermination": 14,
+        "daysToHarvest": 70,
+        "tags": ["herb", "annual", "direct-sow", "pollinator-friendly"],
+        "germinationNotes": "Grows a long taproot, so it's best to sow directly."
+      },
+      {
+        "id": "db-common-mint",
+        "name": "Common Mint",
+        "imageId": "basil-seeds",
+        "notes": "Aggressive spreader. Best grown in containers to keep it from taking over.",
+        "plantingDepth": "1/8 inch",
+        "spacing": "18 inches",
+        "daysToGermination": 15,
+        "daysToHarvest": 90,
+        "tags": ["herb", "perennial", "invasive", "container-friendly"],
+        "germinationNotes": "Germination can be erratic. Often easier to propagate from cuttings."
+      },
+      {
+        "id": "db-italian-oregano",
+        "name": "Italian Oregano",
+        "imageId": "basil-seeds",
+        "notes": "Hardy perennial. Spreads to form a nice ground cover. Flavor is best before flowering.",
+        "plantingDepth": "Surface sow",
+        "spacing": "12 inches",
+        "daysToGermination": 15,
+        "daysToHarvest": 85,
+        "tags": ["herb", "perennial", "full-sun", "drought-tolerant"],
+        "germinationNotes": "Seeds need light to germinate; do not cover them."
+      },
+      {
+        "id": "db-giant-of-italy-parsley",
+        "name": "Giant of Italy Parsley",
+        "imageId": "basil-seeds",
+        "notes": "Flat-leaf parsley with excellent flavor. Biennial, but usually grown as an annual.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "10 inches",
+        "daysToGermination": 21,
+        "daysToHarvest": 75,
+        "tags": ["herb", "biennial", "part-shade"],
+        "germinationNotes": "Soak seeds overnight to speed up the notoriously slow germination."
+      },
+      {
+        "id": "db-common-rosemary",
+        "name": "Common Rosemary",
+        "imageId": "basil-seeds",
+        "notes": "Woody perennial herb. Drought tolerant once established. Needs well-drained soil.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "24 inches",
+        "daysToGermination": 21,
+        "daysToHarvest": 180,
+        "tags": ["herb", "perennial", "full-sun", "drought-tolerant"],
+        "germinationNotes": "Germination from seed can be difficult. Cuttings are a more reliable method."
+      },
+      {
+        "id": "db-english-thyme",
+        "name": "English Thyme",
+        "imageId": "basil-seeds",
+        "notes": "Low-growing perennial herb. Great as a ground cover or in rock gardens.",
+        "plantingDepth": "1/8 inch",
+        "spacing": "12 inches",
+        "daysToGermination": 20,
+        "daysToHarvest": 90,
+        "tags": ["herb", "perennial", "full-sun", "ground-cover"],
+        "germinationNotes": "Seeds are tiny and slow to germinate. Be patient."
+      },
+      {
+        "id": "db-black-beauty-zucchini",
+        "name": "Black Beauty Zucchini",
+        "imageId": "cucumber-seeds",
+        "notes": "Bush-type plant. Very productive. Harvest fruits when they are 6-8 inches long for best flavor.",
+        "plantingDepth": "1 inch",
+        "spacing": "36 inches",
+        "daysToGermination": 7,
+        "daysToHarvest": 50,
+        "tags": ["vegetable", "full-sun", "bush-habit", "high-yield"],
+        "germinationNotes": "Direct sow after the last frost when the soil is warm."
+      },
+      {
+        "id": "db-marigold-sparky-mix",
+        "name": "Marigold Sparky Mix",
+        "imageId": "tomato-seeds",
+        "notes": "Companion plant that is said to deter nematodes and other pests. Easy to grow.",
+        "plantingDepth": "1/4 inch",
+        "spacing": "8 inches",
+        "daysToGermination": 7,
+        "daysToHarvest": 60,
+        "tags": ["flower", "annual", "companion-plant", "pest-resistant"],
+        "germinationNotes": "Easy to grow from seed. Direct sow after last frost or start indoors."
+      },
+      {
+        "id": "db-alaska-nasturtium",
+        "name": "Alaska Nasturtium",
+        "imageId": "tomato-seeds",
+        "notes": "Variegated leaves and edible flowers. Great for trap-cropping aphids.",
+        "plantingDepth": "1/2 inch",
+        "spacing": "12 inches",
+        "daysToGermination": 10,
+        "daysToHarvest": 55,
+        "tags": ["flower", "annual", "edible-flowers", "companion-plant"],
+        "germinationNotes": "Soak seeds overnight before planting. They prefer poor soil."
+      }
   ]
 }
+
+    
