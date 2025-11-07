@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -7,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Upload, X } from 'lucide-react';
-import type { LogEntry, TaskType, Seed } from '@/lib/types';
+import type { LogEntry, TaskType, SeedDetails } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -76,7 +75,7 @@ interface LogDialogProps {
   onSave: (log: LogEntry) => void;
   log?: Partial<LogEntry>;
   tasks: TaskType[];
-  seeds?: Seed[];
+  seeds: SeedDetails[];
 }
 
 export function LogDialog({ isOpen, onOpenChange, onSave, log, tasks, seeds }: LogDialogProps) {

@@ -1,12 +1,11 @@
-
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { Plus, Edit, Trash2, Search, ArrowUpDown, ImageIcon, Scale, MapPin, Sprout } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { INITIAL_SEEDS } from '@/lib/data';
-import type { LogEntry, Seed } from '@/lib/types';
+import { INITIAL_SEEDS, SEED_DATABASE } from '@/lib/data';
+import type { LogEntry, Seed, SeedDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,13 @@ import { useTasks } from '@/hooks/use-tasks';
 
 type SortKey = 'task' | 'date';
 
+const getSeedDetails = (seed: Seed): SeedDetails | null => {
+  const details = SEED_DATABASE.find(s => s.id === seed.seedDetailsId);
+  if (!details) return null;
+  return { ...details, ...seed };
+}
+
+
 export default function LogsPage() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
@@ -58,11 +64,15 @@ export default function LogsPage() {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
 
   const { toast } = useToast();
+
+  const allSeedDetails = useMemo(() => {
+    return seeds.map(getSeedDetails).filter((s): s is SeedDetails => s !== null);
+  }, [seeds]);
   
   const getSeedById = useCallback((seedId?: string) => {
     if (!seedId) return undefined;
-    return seeds.find((seed) => seed.id === seedId);
-  }, [seeds]);
+    return allSeedDetails.find((seed) => seed.id === seedId);
+  }, [allSeedDetails]);
 
   const handleAdd = useCallback(() => {
     setEditingLog(undefined);
@@ -294,7 +304,7 @@ export default function LogsPage() {
         onSave={handleSave}
         log={editingLog}
         tasks={allTasks}
-        seeds={seeds}
+        seeds={allSeedDetails}
       />
       
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
