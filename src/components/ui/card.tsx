@@ -35,6 +35,8 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    role="heading"
+    aria-level={2}
     className={cn(
       "text-2xl font-semibold leading-none tracking-tight",
       className

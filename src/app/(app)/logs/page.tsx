@@ -43,15 +43,6 @@ import { deleteImage } from '@/lib/idb';
 import { LogPhoto } from '@/components/app/logs/log-photo';
 import { useTasks } from '@/hooks/use-tasks';
 
-type SortKey = 'task' | 'date';
-
-const getSeedDetails = (seed: Seed): SeedDetails | null => {
-  const details = SEED_DATABASE.find(s => s.id === seed.seedDetailsId);
-  if (!details) return null;
-  return { ...details, ...seed };
-}
-
-
 export default function LogsPage() {
   const [logs, setLogs] = useLocalStorage<LogEntry[]>('logs', []);
   const [seeds, setSeeds] = useLocalStorage<Seed[]>('seeds', INITIAL_SEEDS);
@@ -67,7 +58,10 @@ export default function LogsPage() {
   const { toast } = useToast();
 
   const allSeedDetails = useMemo(() => {
-    return seeds.map(s => getSeedDetails(s)).filter((s): s is SeedDetails => s !== null);
+    return seeds.map(s => {
+      const details = SEED_DATABASE.find(db => db.id === s.seedDetailsId);
+      return details ? { ...details, ...s } : null;
+    }).filter((s): s is SeedDetails => s !== null);
   }, [seeds]);
   
   const getSeedById = useCallback((seedId?: string) => {

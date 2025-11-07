@@ -18,7 +18,7 @@ jest.mock('@/hooks/use-toast', () => ({
 }));
 
 // Mock the useTheme hook as it's used in SettingsPage
-jest.mock('@/hooks/use-theme', () => ({
+jest.mock('@/components/theme-provider', () => ({
   useTheme: () => ({
     theme: 'light',
     setTheme: jest.fn(),

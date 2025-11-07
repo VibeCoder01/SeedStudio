@@ -113,7 +113,7 @@ describe('Seed Data Integrity Checks', () => {
     expect(cardTitle).toBeInTheDocument();
 
     // Also check that we have more than the original 4 seeds rendering
-    const allCards = screen.getAllByRole('heading', { level: 2 }); // CardTitle renders as h2-like div
+    const allCards = screen.getAllByRole('heading', { level: 2, 'hidden': true}); // CardTitle renders as div but has aria-level
     expect(allCards.length).toBe(INITIAL_SEEDS.length);
   });
 });
