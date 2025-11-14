@@ -1,3 +1,9 @@
+## ----- BUILT FOR THE FUN OF BUILDING      -----
+## ----- KEEP YOUR EXPECTATIONS LOW         ----- 
+## ----- ALL CODE AND PROSE IS AI GENERATED -----
+## ----- USE WITH CAUTION !!!               -----
+##
+
 # Seed Studio: Your Digital Gardening Companion
 
 Welcome to Seed Studio, a comprehensive application designed to help you manage every aspect of your gardening hobby. From tracking your seed inventory to logging your daily activities and celebrating your harvests, Seed Studio is the perfect tool to help you grow a successful garden.
